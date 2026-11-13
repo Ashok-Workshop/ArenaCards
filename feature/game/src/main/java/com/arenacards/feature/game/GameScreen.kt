@@ -23,6 +23,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -48,8 +51,9 @@ fun ArenaCardsGameScreen(
     viewModel: GameViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
+    var showDifficultyDialog by remember { mutableStateOf(false) }
     LaunchedEffect(playerCount) {
-        viewModel.startNewGame(playerCount)
+        viewModel.ensurePlayerCount(playerCount)
     }
 
     BoxWithConstraints(
@@ -81,7 +85,18 @@ fun ArenaCardsGameScreen(
                         style = MaterialTheme.typography.headlineMedium
                     )
                 }
-                ArenaSecondaryButton(text = "Exit", onClick = onExit)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ArenaSecondaryButton(
+                        text = "CPU ${state.difficulty.name.lowercase().replaceFirstChar { it.uppercase() }}",
+                        onClick = { showDifficultyDialog = true }
+                    )
+                    ArenaSecondaryButton(
+                        text = if (state.isPaused) "Resume" else "Pause",
+                        onClick = if (state.isPaused) viewModel::resumeGame else viewModel::pauseGame,
+                        enabled = (state.winner == null && !state.isDraw) || state.isPaused
+                    )
+                    ArenaSecondaryButton(text = "Exit", onClick = onExit)
+                }
             }
 
             ArenaPanel(modifier = Modifier.fillMaxWidth()) {
@@ -96,7 +111,8 @@ fun ArenaCardsGameScreen(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Local practice preview • special-card effects are not enabled",
+                    text = "Active color: ${state.activeColor.name.lowercase()} • " +
+                        if (state.turnDirection > 0) "clockwise" else "counter-clockwise",
                     modifier = Modifier.padding(top = 5.dp),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall
@@ -177,7 +193,7 @@ fun ArenaCardsGameScreen(
                             height = 104.dp
                         )
                         Text(
-                            text = "TOP CARD",
+                            text = "TOP CARD • ${state.activeColor.name}",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.labelSmall
                         )
@@ -199,8 +215,8 @@ fun ArenaCardsGameScreen(
                     )
                 }
                 Text(
-                    text = if (state.winner == null) "YOUR TURN" else "MATCH COMPLETE",
-                    color = if (state.winner == null) ArenaPalette.Green else ArenaPalette.Gold,
+                    text = if (state.winner == null && !state.isDraw) "YOUR TURN" else "MATCH COMPLETE",
+                    color = if (state.winner == null && !state.isDraw) ArenaPalette.Green else ArenaPalette.Gold,
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -208,7 +224,7 @@ fun ArenaCardsGameScreen(
             if (state.playerCards.isEmpty()) {
                 ArenaPanel(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = state.winner ?: "Your hand is empty.",
+                        text = state.winner ?: if (state.isDraw) "Round drawn." else "Your hand is empty.",
                         style = MaterialTheme.typography.titleLarge
                     )
                 }
@@ -240,22 +256,33 @@ fun ArenaCardsGameScreen(
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 ArenaSecondaryButton(
-                    text = "Draw card",
+                    text = if (state.hasDrawnThisTurn) "Card drawn" else "Draw card",
                     onClick = viewModel::drawCard,
                     modifier = Modifier.weight(1f),
-                    enabled = state.winner == null && state.currentPlayerIndex == 0 && state.drawPileCount > 0
+                    enabled = state.winner == null && !state.isDraw && !state.isPaused &&
+                        state.currentPlayerIndex == 0 && !state.hasDrawnThisTurn
                 )
                 ArenaPrimaryButton(
                     text = "Play selected",
                     onClick = viewModel::playSelectedCard,
                     modifier = Modifier.weight(1f),
-                    enabled = state.selectedCardIndex != null && state.winner == null
+                    enabled = state.selectedCardIndex != null && state.winner == null &&
+                        !state.isDraw && !state.isPaused
                 )
             }
 
-            if (state.winner != null) {
+            if (state.hasDrawnThisTurn && state.winner == null && !state.isDraw) {
+                ArenaSecondaryButton(
+                    text = "End turn",
+                    onClick = viewModel::endTurn,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !state.isPaused
+                )
+            }
+
+            if (state.winner != null || state.isDraw) {
                 ArenaPrimaryButton(
-                    text = "Play again",
+                    text = if (state.isDraw) "Replay draw" else "Play again",
                     onClick = { viewModel.startNewGame(playerCount) },
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -273,6 +300,43 @@ fun ArenaCardsGameScreen(
         WildColorDialog(
             onChoose = viewModel::chooseWildColor,
             onDismiss = viewModel::cancelWildColor
+        )
+    }
+
+    if (state.isPaused) {
+        AlertDialog(
+            onDismissRequest = viewModel::resumeGame,
+            title = { Text("Practice paused") },
+            text = { Text("Your offline match is safely saved. Resume whenever you are ready.") },
+            confirmButton = {
+                TextButton(onClick = viewModel::resumeGame) { Text("Resume match") }
+            },
+            shape = MaterialTheme.shapes.extraLarge
+        )
+    }
+
+    if (showDifficultyDialog) {
+        AlertDialog(
+            onDismissRequest = { showDifficultyDialog = false },
+            title = { Text("CPU difficulty") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CpuDifficulty.entries.forEach { difficulty ->
+                        ArenaPrimaryButton(
+                            text = difficulty.name.lowercase().replaceFirstChar { it.uppercase() },
+                            onClick = {
+                                viewModel.setDifficulty(difficulty)
+                                showDifficultyDialog = false
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showDifficultyDialog = false }) { Text("Close") }
+            },
+            shape = MaterialTheme.shapes.extraLarge
         )
     }
 }
@@ -296,7 +360,7 @@ private fun OpponentSeat(
             style = MaterialTheme.typography.labelLarge
         )
         Text(
-            text = "${opponent.cardCount} cards • ${opponent.score} pts",
+            text = "${opponent.cardCount} cards",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.labelSmall,
             textAlign = TextAlign.Start

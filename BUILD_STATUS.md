@@ -2,10 +2,13 @@
 
 ## Phase 2A - UI and offline game
 
-**Status:** Implemented; existing game functionality preserved.
+**Status:** UI foundation remains implemented; offline game rules have been substantially extended. Additional polish and device validation remain.
 
 - Premium Material 3 design system, onboarding, dashboard, navigation, responsive practice table, and local game state remain in place.
-- The existing game engine was not replaced or modified for this authentication work.
+- The practice engine now uses a complete 108-card deck for two-to-four players, matching rules, Skip, Reverse, Draw Two, Wild, legal Wild Draw Four play, penalties, win/draw detection, discard reshuffling, and score values.
+- Easy/medium/hard CPU choices use only the CPU's hand and public table/player-card counts.
+- Pause/resume, CPU difficulty selection, and SavedStateHandle match restoration are implemented.
+- Sound/animation polish, persisted local statistics, additional game settings, and physical-device QA remain outstanding; see [REMAINING_WORK.md](./REMAINING_WORK.md).
 - Online multiplayer, coin balances/transactions, and rewards are not implemented.
 
 ## Phase 2B - Firebase Authentication
@@ -23,7 +26,9 @@
 - Firebase Console could not be inspected from the development environment. The owner reported enabling Google, Email/Password, and Phone, but that status, SMS region policy, and quota settings must still be confirmed in Console.
 - No Google, email, or phone flow has been tested with a real device/account as part of this work.
 
-## Validation
+## Validation - Phase 2B historical checkpoint
+
+The following authentication/game baseline predates the offline-engine expansion below.
 
 Ran from PowerShell with the cached JDK 17:
 
@@ -57,7 +62,7 @@ Follow [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for SHA-1/SHA-256 re
 - `firebase/functions/profile-domain.test.js` - passed, 5 tests.
 - `:feature:profile:testDebugUnitTest` - passed, 11 tests, 0 failures.
 - `:feature:auth:testDebugUnitTest` - passed, 16 tests, 0 failures.
-- `:feature:game:testDebugUnitTest` - passed, 3 tests, 0 failures.
+- `:feature:game:testDebugUnitTest` - passed, 28 tests, 0 failures after offline-engine review and fixes.
 - `:app:assembleDebug` - passed.
 - `firebase/functions` domain helper tests - passed, 5 tests.
 - Firestore Emulator rules tests - passed, 5 tests.

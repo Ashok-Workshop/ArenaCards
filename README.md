@@ -15,7 +15,7 @@ ArenaCards is a premium Android card game starter project built with Kotlin, Jet
 - Modular architecture for future features
 - Three-page onboarding with locally persisted completion
 - Home dashboard, account UI, game-mode selection, and practice table
-- Offline matching game using the existing game engine helpers
+- Offline card game with special-card rules, color selection, CPU opponents, and resumable practice
 - Navigation and theme system
 - System-aware Material 3 light and dark themes
 
@@ -35,7 +35,7 @@ Gamer ID and username allocation are implemented in trusted Cloud Functions sour
 
 The Firestore Emulator rules test suite and Cloud Functions domain helper tests are available under `firebase/`. Emulator tests do not establish production security or verify deployed Functions.
 
-The practice table supports basic matching, drawing, simple CPU turns, and wild-card color selection. Skip, reverse, and draw-card effects are not implemented yet. Offline results do not grant competitive rewards.
+The offline practice engine uses a 108-card deck and supports two to four seats, matching, Skip, Reverse, Draw Two, Wild, legal Wild Draw Four play, penalties, CPU difficulty selection, pause/resume, and saved match state. Offline results do not grant competitive rewards. Animation/audio polish, durable statistics, full device QA, and all online economy/social/multiplayer features remain outstanding; see [REMAINING_WORK.md](./REMAINING_WORK.md).
 
 ## Install a debug build on a phone
 
