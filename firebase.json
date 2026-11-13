@@ -1,0 +1,17 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": [
+    {
+      "source": "firebase/functions",
+      "codebase": "profile",
+      "runtime": "nodejs22"
+    }
+  ],
+  "emulators": {
+    "firestore": {
+      "port": 8080
+    }
+  }
+}

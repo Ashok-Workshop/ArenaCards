@@ -1,0 +1,60 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owns(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function approvedPublicFields() {
+      return resource.data.keys().hasOnly([
+        'gamerId',
+        'username',
+        'usernameNormalized',
+        'displayName',
+        'avatarId',
+        'createdAt',
+        'updatedAt',
+        'profileVisibility',
+        'totalMatches',
+        'wins',
+        'losses',
+        'draws',
+        'experiencePoints',
+        'playerLevel'
+      ]);
+    }
+
+    match /users/{uid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /privateAccounts/{uid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /publicPlayers/{uid} {
+      allow read: if owns(uid)
+        || (resource.data.profileVisibility == 'public' && approvedPublicFields());
+      allow create, update, delete: if false;
+    }
+
+    match /usernames/{usernameNormalized} {
+      allow read, write: if false;
+    }
+
+    match /gamerIds/{gamerId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
