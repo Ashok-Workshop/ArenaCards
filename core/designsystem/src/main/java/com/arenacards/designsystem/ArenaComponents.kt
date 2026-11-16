@@ -475,8 +475,18 @@ fun ArenaCardReveal(
             .width(width)
             .height(height)
             .graphicsLayer {
+                // A restrained 2.5D flip: add a small pitch and depth response
+                // without introducing a heavyweight 3D renderer or bitmap assets.
+                val angle = Math.toRadians(rotation.value.toDouble())
                 rotationY = rotation.value
-                cameraDistance = 32 * density
+                rotationX = if (reducedMotion) 0f else
+                    (kotlin.math.sin(angle) * 5.5f).toFloat()
+                val depthScale = if (reducedMotion) 1f else
+                    0.975f + (kotlin.math.abs(kotlin.math.sin(angle)) * 0.025f).toFloat()
+                scaleX = depthScale
+                scaleY = depthScale
+                shadowElevation = if (reducedMotion) 0.dp.toPx() else 12.dp.toPx()
+                cameraDistance = 28 * density
             },
         contentAlignment = Alignment.Center
     ) {
