@@ -35,6 +35,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPalette
 import com.arenacards.designsystem.ArenaPrimaryButton
@@ -96,12 +97,22 @@ fun PlayerProfileScreen(
             .padding(horizontal = 22.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TextButton(onClick = onBack) { Text("‹  Back") }
-        Text(
-            text = "ARENA  /  PLAYER PROFILE",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.labelLarge
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ArenaCardsLogoMark(Modifier.size(42.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text("ARENA IDENTITY", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("PLAYER PROFILE", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                }
+            }
+            TextButton(onClick = onBack) { Text("‹ Back") }
+        }
         Text(
             text = if (profile == null) "Create your player identity" else "Your player card",
             color = MaterialTheme.colorScheme.onBackground,
