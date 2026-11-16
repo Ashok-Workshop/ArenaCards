@@ -58,6 +58,8 @@ This tracker reflects the repository after extending offline practice. “Implem
 - No monetary cost estimate is claimed. Estimate Firebase, SMS, Functions, Firestore, App Check, ads, multiplayer, chat, and notifications only after region, user volume, data shape, and traffic assumptions are agreed; verify current vendor pricing and quotas before launch. The `COST_ESTIMATION.md` document lists cost drivers.
 - Never commit signing keys/passwords, Firebase service-account credentials, local `google-services.json`, or local machine configuration.
 
+- Lifecycle-aware state collection was introduced for the app root, practice game, authentication, profile and leaderboard screens. The Android CI run on commit `4138c44` passed unit tests and debug APK assembly after adding the runtime-compose dependency to each affected module. This reduces background collection while screens are stopped; it does not replace physical-device lifecycle/process-death QA.
+
 ## Latest development pass (2026-11-16)
 
 - The practice pause menu now exposes Easy, Medium, and Hard CPU difficulty choices and reflects the active selection. The choice continues to use the existing SavedStateHandle persistence.
