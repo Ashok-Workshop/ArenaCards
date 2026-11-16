@@ -525,24 +525,74 @@ private fun TournamentDetailCard(
                         modifier = Modifier.width(220.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("Round ${roundIndex + 1}", style = MaterialTheme.typography.titleMedium)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("ROUND ${roundIndex + 1}", style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black)
+                            Text("${round.size} MATCHES", color = MaterialTheme.colorScheme.secondary,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
                         round.forEach { match ->
-                            ArenaPanel(Modifier.fillMaxWidth()) {
-                                Text(
-                                    when (match.status) {
-                                        "COMPLETED" -> if (match.isBye) "BYE ADVANCEMENT" else "COMPLETED"
-                                        "ACTIVE" -> "MATCH IN PROGRESS"
-                                        else -> "UPCOMING MATCH"
-                                    },
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    style = MaterialTheme.typography.labelSmall
+                            val activeMatch = match.status == "ACTIVE"
+                            val completedMatch = match.status == "COMPLETED"
+                            ArenaPanel(
+                                Modifier.fillMaxWidth().animateContentSize(),
+                                backgroundBrush = Brush.linearGradient(
+                                    if (activeMatch) listOf(Color(0xFF245D60), Color(0xFF1A3450))
+                                    else if (completedMatch) listOf(Color(0xFF293451), Color(0xFF18243B))
+                                    else listOf(Color(0xFF202B45), Color(0xFF172238))
                                 )
-                                match.players.forEach { player ->
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        player?.second ?: "Open bracket slot",
-                                        modifier = Modifier.padding(top = 4.dp),
-                                        fontWeight = if (player?.first == match.winnerUid) FontWeight.Bold else FontWeight.Normal
+                                        when {
+                                            completedMatch && match.isBye -> "BYE ADVANCEMENT"
+                                            completedMatch -> "FINAL RESULT"
+                                            activeMatch -> "LIVE MATCH"
+                                            else -> "UPCOMING"
+                                        },
+                                        color = if (activeMatch) Color(0xFF7DE2C3) else ArenaPalette.Gold,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black
                                     )
+                                    Text("R${roundIndex + 1}", color = Color.White.copy(alpha = 0.55f),
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                                match.players.forEachIndexed { seat, player ->
+                                    val isWinner = player?.first != null && player.first == match.winnerUid
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            player?.second ?: "Open bracket slot",
+                                            color = if (isWinner) Color(0xFFFFD477) else Color(0xFFE2EAF7),
+                                            fontWeight = if (isWinner) FontWeight.ExtraBold else FontWeight.Medium,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        if (isWinner) {
+                                            Text("WINNER", color = Color(0xFFFFD477),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Black)
+                                        } else if (player == null) {
+                                            Text("TBD", color = Color.White.copy(alpha = 0.42f),
+                                                style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    }
+                                    if (seat == 0) {
+                                        androidx.compose.material3.HorizontalDivider(
+                                            modifier = Modifier.padding(top = 7.dp),
+                                            color = Color.White.copy(alpha = 0.10f)
+                                        )
+                                    }
                                 }
                                 if (match.canStart) {
                                     ArenaPrimaryButton(
@@ -554,7 +604,7 @@ private fun TournamentDetailCard(
                                                 onOpenOnlineMatch
                                             )
                                         },
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                                         enabled = !busy
                                     )
                                 }
