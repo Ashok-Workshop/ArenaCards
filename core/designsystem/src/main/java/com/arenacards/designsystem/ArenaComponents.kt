@@ -69,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.LocalContentColor
 
 enum class ArenaCardColor { RED, BLUE, GREEN, YELLOW, WILD }
@@ -619,24 +620,85 @@ fun ArenaCardBack(
     width: Dp = 74.dp,
     height: Dp = 112.dp
 ) {
+    val shape = RoundedCornerShape(ArenaShapeTokens.Card)
     Box(
         modifier = modifier
             .size(width, height)
-            .clip(RoundedCornerShape(ArenaShapeTokens.Card))
+            .shadow(9.dp, shape)
+            .clip(shape)
             .background(
-                Brush.linearGradient(listOf(Color(0xFF263B77), Color(0xFF172343)))
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF263D78), Color(0xFF111B36), Color(0xFF202E59))
+                )
             )
-            .border(1.dp, Color.White.copy(alpha = 0.78f), RoundedCornerShape(ArenaShapeTokens.Card))
-            .semantics { contentDescription = "ArenaCards card back" },
+            .border(
+                width = 1.4.dp,
+                brush = Brush.linearGradient(
+                    listOf(Color(0xFFFFE4A1), Color.White.copy(alpha = 0.72f), Color(0xFF8DABEF))
+                ),
+                shape = shape
+            )
+            .drawBehind {
+                // Fine radial glints and inset frame make the reverse side
+                // recognisable without adding a bitmap or expensive effects.
+                val inset = size.minDimension * 0.085f
+                drawRoundRect(
+                    color = Color(0xFFFFD477).copy(alpha = 0.72f),
+                    topLeft = Offset(inset, inset),
+                    size = Size(size.width - inset * 2f, size.height - inset * 2f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.minDimension * 0.12f),
+                    style = Stroke(width = 1.dp.toPx())
+                )
+                val center = Offset(size.width / 2f, size.height / 2f)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(Color(0xFF8DABEF).copy(alpha = 0.24f), Color.Transparent),
+                        center = center,
+                        radius = size.minDimension * 0.62f
+                    ),
+                    radius = size.minDimension * 0.62f,
+                    center = center
+                )
+                for (index in 0 until 4) {
+                    val x = size.width * (0.22f + index * 0.19f)
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.48f),
+                        radius = 1.dp.toPx(),
+                        center = Offset(x, size.height * 0.17f)
+                    )
+                    drawCircle(
+                        color = Color(0xFFFFD477).copy(alpha = 0.55f),
+                        radius = 1.dp.toPx(),
+                        center = Offset(x, size.height * 0.83f)
+                    )
+                }
+            }
+            .semantics { contentDescription = "ArenaCards premium card back" },
         contentAlignment = Alignment.Center
     ) {
         Box(
-            modifier = Modifier
-                .padding(6.dp)
+            Modifier
+                .padding(7.dp)
                 .matchParentSize()
-                .border(1.dp, ArenaPalette.Blue.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
+                .border(
+                    1.dp,
+                    Color.White.copy(alpha = 0.16f),
+                    RoundedCornerShape(10.dp)
+                )
         )
-        ArenaCardsLogoMark(Modifier.size(43.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            ArenaCardsLogoMark(Modifier.size(width * 0.58f))
+            Text(
+                text = "ARENA",
+                color = Color(0xFFFFE5A8),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.4.sp
+            )
+        }
     }
 }
 
