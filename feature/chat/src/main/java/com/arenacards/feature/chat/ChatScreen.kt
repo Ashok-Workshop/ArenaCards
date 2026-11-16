@@ -1,5 +1,8 @@
 package com.arenacards.feature.chat
 
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,7 +45,9 @@ fun ChatScreen(
     val inConversation = state.selectedConversationId != null || state.selectedRoomId != null
 
     Column(
-        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = modifier.fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color(0xFF080E1D), Color(0xFF13223A), Color(0xFF080E1D))))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(
