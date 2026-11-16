@@ -51,7 +51,7 @@ fun LeaderboardScreen(
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface)
+                    listOf(Color(0xFF080E1D), Color(0xFF14233D), Color(0xFF080E1D))
                 )
             )
             .verticalScroll(rememberScrollState())
