@@ -13,6 +13,9 @@ These are owner actions. No Firebase deployment, billing activation, or producti
 
 - The latest confirmed Android CI pass is commit `8a3d7b2` (unit tests and debug APK assembly). Commit `050fd47` adds two Compose instrumentation tests for the card-reveal animation and reduced-motion path; GitHub has not reported a check run for that commit yet, so those new tests remain unverified. The earlier API 35 component suite passed, but do not treat that as execution of the new tests.
 
+- Android CI passed on commit `8977687` after retrying a transient Maven Central HTTP 429 dependency-download failure. The run completed unit tests, debug APK assembly, and `assembleDebugAndroidTest`; the Compose instrumentation source compiles. This did not execute the UI tests on an emulator.
+- Commit `52b5519` adds an API 35 emulator step using `connectedDebugAndroidTest`. Its result is pending; only record UI test execution after the emulator job completes successfully.
+
 ## Before building from a fresh clone
 
 - Install Android Studio and the project-required Android SDK/platform tools.
