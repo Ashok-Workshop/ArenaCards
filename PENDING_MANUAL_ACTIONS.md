@@ -11,6 +11,8 @@ These are owner actions. No Firebase deployment, billing activation, or producti
 - Firebase Functions CI passed on commit `ae11798`: Node.js unit tests, Firestore rules emulator tests, and Functions emulator tests. The suite includes moderator/admin report review authorization, report idempotency, self-report/invalid-reason rejection, and report rate-limit coverage.
 - These CI checks are source-level validation only. They do not establish production Firebase deployment, live FCM delivery, physical-device QA, accessibility certification, or Play Store readiness.
 
+- The latest confirmed Android CI pass is commit `8a3d7b2` (unit tests and debug APK assembly). Commit `050fd47` adds two Compose instrumentation tests for the card-reveal animation and reduced-motion path; GitHub has not reported a check run for that commit yet, so those new tests remain unverified. The earlier API 35 component suite passed, but do not treat that as execution of the new tests.
+
 ## Before building from a fresh clone
 
 - Install Android Studio and the project-required Android SDK/platform tools.
