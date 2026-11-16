@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPrimaryButton
 import com.arenacards.designsystem.ArenaSecondaryButton
@@ -54,10 +55,14 @@ fun WalletScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
         ) {
-            Column(Modifier.weight(1f)) {
-                Text("ARENA / TREASURY", color = MaterialTheme.colorScheme.tertiary,
-                    style = MaterialTheme.typography.labelLarge)
-                Text("Your wallet", style = MaterialTheme.typography.headlineLarge)
+            Row(Modifier.weight(1f), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ArenaCardsLogoMark(Modifier.size(42.dp))
+                Column {
+                    Text("ARENA / TREASURY", color = MaterialTheme.colorScheme.tertiary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Your wallet", style = MaterialTheme.typography.headlineLarge)
+                }
             }
             ArenaSecondaryButton(text = "‹ Back", onClick = onBack)
         }
