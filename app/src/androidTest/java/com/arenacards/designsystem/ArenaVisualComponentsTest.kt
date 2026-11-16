@@ -113,6 +113,23 @@ class ArenaVisualComponentsTest {
     }
 
     @Test
+    fun premiumCardExposesItsOriginalCardIdentity() {
+        composeRule.setContent {
+            ArenaCardsTheme {
+                ArenaPremiumCard(
+                    color = ArenaCardColor.WILD,
+                    value = 14,
+                    selected = true,
+                    reducedMotion = true
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Wild Draw Four wild ArenaCards card")
+            .assertExists()
+    }
+
+    @Test
     fun avatarKeepsPlayerIdentityAccessible() {
         composeRule.setContent {
             ArenaCardsTheme {
