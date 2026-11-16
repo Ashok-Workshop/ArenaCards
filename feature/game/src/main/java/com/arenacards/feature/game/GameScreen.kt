@@ -686,26 +686,82 @@ private fun OpponentSeat(
     opponent: OpponentUiState,
     modifier: Modifier = Modifier
 ) {
-    ArenaPanel(modifier = modifier.animateContentSize()) {
-        PlayerAvatar(
-            initials = opponent.name.substringAfterLast(" ").take(1),
-            name = opponent.name,
-            size = 42.dp,
-            isActive = opponent.isActive,
-            backgroundColor = ArenaPalette.Blue,
-            avatarId = if (opponent.name.endsWith("1")) "comet" else "spark"
-        )
+    val handProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = (opponent.cardCount.coerceIn(0, 14) / 14f),
+        animationSpec = tween(280),
+        label = "opponent-hand-count"
+    )
+    ArenaPanel(
+        modifier = modifier.animateContentSize(),
+        backgroundBrush = if (opponent.isActive) {
+            Brush.linearGradient(listOf(Color(0xFF29445B), Color(0xFF183A43), Color(0xFF17253E)))
+        } else {
+            Brush.linearGradient(listOf(Color(0xFF1A2941), Color(0xFF142139)))
+        }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PlayerAvatar(
+                initials = opponent.name.substringAfterLast(" ").take(1),
+                name = opponent.name,
+                size = 46.dp,
+                isActive = opponent.isActive,
+                backgroundColor = ArenaPalette.Blue,
+                avatarId = if (opponent.name.endsWith("1")) "comet" else "spark"
+            )
+            Box(
+                modifier = Modifier
+                    .size(9.dp)
+                    .background(
+                        if (opponent.isActive) ArenaPalette.Green else Color(0xFF68778F),
+                        androidx.compose.foundation.shape.CircleShape
+                    )
+            )
+        }
         Text(
             text = opponent.name,
-            modifier = Modifier.padding(top = 8.dp),
-            style = MaterialTheme.typography.labelLarge
+            modifier = Modifier.padding(top = 9.dp),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
         )
-        Text(
-            text = "${opponent.cardCount} cards",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Start
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (opponent.isActive) "PLAYING" else "IN THE ARENA",
+                color = if (opponent.isActive) ArenaPalette.Green else Color(0xFF9EADC4),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "${opponent.cardCount} cards",
+                color = Color(0xFFD1DCEC),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .height(4.dp)
+                .background(Color.White.copy(alpha = 0.10f), androidx.compose.foundation.shape.CircleShape)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(handProgress)
+                    .height(4.dp)
+                    .background(
+                        Brush.horizontalGradient(listOf(ArenaPalette.Blue, ArenaPalette.Purple)),
+                        androidx.compose.foundation.shape.CircleShape
+                    )
+            )
+        }
     }
 }
 
