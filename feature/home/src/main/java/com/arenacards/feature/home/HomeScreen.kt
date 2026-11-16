@@ -1,42 +1,39 @@
 package com.arenacards.feature.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.arenacards.designsystem.ArenaCardColor
-import com.arenacards.designsystem.ArenaCardTile
-import com.arenacards.designsystem.ArenaPanel
-import com.arenacards.designsystem.ArenaPalette
-import com.arenacards.designsystem.ArenaPrimaryButton
-import com.arenacards.designsystem.ArenaSecondaryButton
+import androidx.compose.ui.unit.sp
 import com.arenacards.designsystem.CoinBalance
 import com.arenacards.designsystem.PlayerAvatar
+
+private val Night = Color(0xFF080D20)
+private val Panel = Color(0xFF141D39)
+private val PanelRaised = Color(0xFF202C52)
+private val Violet = Color(0xFF9B72FF)
+private val Cyan = Color(0xFF55D9F5)
+private val Gold = Color(0xFFFFD36A)
+private val Muted = Color(0xFFAAB7D5)
 
 @Composable
 fun HomeScreen(
@@ -67,359 +64,229 @@ fun HomeScreen(
     readyMissionCount: Int?
 ) {
     BoxWithConstraints(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface)
-                )
-            )
+        Modifier.fillMaxSize().background(
+            Brush.verticalGradient(listOf(Night, Color(0xFF111B39), Night))
+        )
     ) {
-        val wideLayout = maxWidth >= 640.dp
+        val wide = maxWidth >= 640.dp
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = if (wideLayout) 32.dp else 20.dp, vertical = 18.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState())
+                .padding(horizontal = if (wide) 32.dp else 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text(
-                        "ARENA  /  CARDS",
-                        color = MaterialTheme.colorScheme.secondary,
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        "A seat at every table.",
-                        modifier = Modifier.padding(top = 3.dp),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("ARENA", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                    Text("CARDS  •  MULTIPLAYER", color = Cyan, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
                 }
-                CoinBalance(
-                    amount = walletBalance?.toString() ?: "—",
-                    label = when {
-                        !isAuthenticated -> "Sign in for wallet"
-                        walletBalance != null -> "Server wallet balance"
-                        walletLoading -> "Wallet balance loading"
-                        else -> "Wallet balance unavailable"
-                    },
-                    onClick = onWallet
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    CoinBalance(
+                        amount = walletBalance?.toString() ?: "—",
+                        label = when {
+                            !isAuthenticated -> "Sign in for wallet"
+                            walletBalance != null -> "Server wallet balance"
+                            walletLoading -> "Wallet balance loading"
+                            else -> "Wallet balance unavailable"
+                        },
+                        onClick = onWallet
+                    )
+                    Surface(
+                        Modifier.size(44.dp).clickable(role = Role.Button, onClick = onProfile)
+                            .semantics { contentDescription = "Open player profile" },
+                        shape = CircleShape, color = PanelRaised,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .12f))
+                    ) {
+                        Box(contentAlignment = Alignment.Center) { Text("☺", color = Violet, fontSize = 23.sp) }
+                    }
+                }
             }
 
-            ArenaPanel(
-                modifier = Modifier.fillMaxWidth(),
-                backgroundBrush = Brush.linearGradient(
-                    listOf(Color(0xFF162342), Color(0xFF252052), Color(0xFF182A3A))
-                ),
-                contentColor = Color.White
+            // Player identity and progression hero
+            Box(
+                Modifier.fillMaxWidth().shadow(18.dp, RoundedCornerShape(28.dp))
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Brush.linearGradient(listOf(Color(0xFF29366D), Color(0xFF35265F), Color(0xFF142C50))))
+                    .border(1.dp, Color.White.copy(alpha = .14f), RoundedCornerShape(28.dp))
+                    .padding(20.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                Column(verticalArrangement = Arrangement.spacedBy(15.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         PlayerAvatar(
                             initials = playerAvatarId?.take(1) ?: "G",
                             name = playerName ?: "Guest player",
-                            size = if (wideLayout) 64.dp else 54.dp,
-                            backgroundColor = ArenaPalette.Purple,
+                            size = 58.dp,
+                            backgroundColor = Violet,
                             avatarId = playerAvatarId
                         )
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                if (isAuthenticated) "WELCOME BACK" else "WELCOME TO ARENACARDS",
-                                color = Color(0xFFB7C7E7),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                playerName ?: "Guest player",
-                                modifier = Modifier.padding(top = 2.dp),
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Spacer(Modifier.width(13.dp))
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                            Text(if (isAuthenticated) "WELCOME BACK" else "WELCOME TO THE ARENA", color = Cyan, fontSize = 10.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.5.sp)
+                            Text(playerName ?: "Guest player", color = Color.White, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(
                                 when {
-                                    playerUsername != null && playerGamerId != null ->
-                                        "@$playerUsername  ·  $playerGamerId"
+                                    playerUsername != null && playerGamerId != null -> "@$playerUsername  •  $playerGamerId"
                                     playerUsername != null -> "@$playerUsername"
-                                    isAuthenticated -> "Complete your player profile"
-                                    else -> "Sign in to save your player identity"
+                                    isAuthenticated -> "Your player profile is ready"
+                                    else -> "Jump in and claim your seat"
                                 },
-                                modifier = Modifier.padding(top = 2.dp),
-                                color = Color(0xFFCFD7E8),
-                                style = MaterialTheme.typography.bodySmall
+                                color = Color(0xFFD4DDF5), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
                             )
                         }
+                        TextButton(onClick = if (isAuthenticated) onProfile else onSignIn) {
+                            Text(if (isAuthenticated) "PROFILE" else "JOIN", color = Gold, fontWeight = FontWeight.ExtraBold, fontSize = 11.sp)
+                        }
                     }
-                    HomeProfileActions(
-                        isAuthenticated = isAuthenticated,
-                        onProfile = onProfile,
-                        onSignIn = onSignIn,
-                        onSignOut = onSignOut,
-                        compact = true
-                    )
-                }
-
-                if (playerLevel != null) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "LEVEL $playerLevel",
-                            color = Color(0xFFFFD66B),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        if (experiencePoints != null) {
-                            Text(
-                                "$experiencePoints XP",
-                                color = Color(0xFFDCE4F4),
-                                style = MaterialTheme.typography.labelMedium
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(Modifier.weight(1f)) {
+                            Text("READY WHEN YOU ARE", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
+                            Text("Pick a mode. Make your move. Own the table.", color = Color(0xFFD4DDF5), fontSize = 11.sp)
+                        }
+                        CardFan()
+                    }
+                    if (playerLevel != null) {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("LEVEL $playerLevel", color = Gold, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold)
+                            Text((experiencePoints ?: 0L).toString() + " XP", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                        if (experiencePoints != null && xpToNextLevel != null) {
+                            val progress = ((1_000 - xpToNextLevel).coerceIn(0, 1_000)) / 1_000f
+                            LinearProgressIndicator(
+                                progress = { progress },
+                                Modifier.fillMaxWidth().height(6.dp).clip(CircleShape),
+                                color = Gold, trackColor = Color.White.copy(alpha = .18f)
                             )
+                            Text("$xpToNextLevel XP TO NEXT LEVEL", color = Color(0xFFD4DDF5), fontSize = 9.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                     if (isAuthenticated) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
-                        ) {
-                            TextButton(onClick = onSignOut) {
-                                Text("Sign out", color = Color(0xFFCFD7E8))
-                            }
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            TextButton(onClick = onSignOut) { Text("SIGN OUT", color = Muted, fontSize = 10.sp, fontWeight = FontWeight.Bold) }
                         }
                     }
-                    if (experiencePoints != null && xpToNextLevel != null) {
-                        val xpIntoLevel = (1_000 - xpToNextLevel).coerceIn(0, 1_000)
-                        LinearProgressIndicator(
-                            progress = { xpIntoLevel / 1_000f },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 7.dp)
-                                .semantics {
-                                    contentDescription =
-                                        "Level $playerLevel progress: $xpIntoLevel of 1000 XP"
-                                },
-                            color = Color(0xFFFFC94A),
-                            trackColor = Color.White.copy(alpha = 0.18f)
-                        )
-                        Text(
-                            "$xpToNextLevel XP to the next level",
-                            modifier = Modifier.padding(top = 4.dp),
-                            color = Color(0xFFCFD7E8),
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
                 }
+            }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    ArenaCardTile(
-                        color = ArenaCardColor.RED,
-                        value = 4,
-                        width = 34.dp,
-                        height = 50.dp,
-                        modifier = Modifier.padding(start = 4.dp)
-                    )
-                    ArenaCardTile(
-                        color = ArenaCardColor.YELLOW,
-                        value = 6,
-                        width = 34.dp,
-                        height = 50.dp
-                    )
-                    ArenaCardTile(
-                        color = ArenaCardColor.BLUE,
-                        value = 8,
-                        width = 34.dp,
-                        height = 50.dp
-                    )
-                    Column(
-                        modifier = Modifier.weight(1f).padding(start = 5.dp),
-                        verticalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Text(
-                            "Your next move starts here.",
-                            color = Color.White,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            if (isAuthenticated) "Your profile and progress sync securely."
-                            else "Play practice or sign in to join online tables.",
-                            color = Color(0xFFCFD7E8),
-                            style = MaterialTheme.typography.bodySmall
-                        )
+            Text("CHOOSE YOUR BATTLE", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+
+            // Featured game mode
+            Box(
+                Modifier.fillMaxWidth().heightIn(min = 178.dp).shadow(16.dp, RoundedCornerShape(26.dp))
+                    .clip(RoundedCornerShape(26.dp))
+                    .background(Brush.linearGradient(listOf(Color(0xFF46295F), Color(0xFF222B58), Color(0xFF132C4B))))
+                    .border(1.dp, Color(0xFFFF6684).copy(alpha = .48f), RoundedCornerShape(26.dp))
+                    .clickable(role = Role.Button, onClick = onPlayOffline).padding(19.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                        Surface(shape = CircleShape, color = Color(0xFFFF6684).copy(alpha = .18f)) {
+                            Text("MOST PLAYED", Modifier.padding(horizontal = 10.dp, vertical = 5.dp), color = Color(0xFFFF91A5), fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                        }
+                        Text("CLASSIC", color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                        Text("The original card battle", color = Color(0xFFD1D9EF), fontSize = 12.sp)
+                        Surface(shape = CircleShape, color = Color(0xFFFF6684)) {
+                            Text("PLAY NOW   →", Modifier.padding(horizontal = 16.dp, vertical = 9.dp), color = Night, fontSize = 10.sp, fontWeight = FontWeight.Black)
+                        }
+                    }
+                    Box(Modifier.width(118.dp).height(126.dp), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(112.dp).clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFFFF6684).copy(alpha = .38f), Color.Transparent))))
+                        MiniCard("7", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -17f }.padding(end = 46.dp, top = 14.dp))
+                        MiniCard("+2", Color(0xFF4B9EFF), Modifier.graphicsLayer { rotationZ = 13f }.padding(start = 43.dp, bottom = 12.dp))
                     }
                 }
             }
 
-            ArenaPrimaryButton(
-                text = "PLAY OFFLINE  ·  PRACTICE",
-                onClick = onPlayOffline,
-                modifier = Modifier.fillMaxWidth()
-            )
-            ArenaSecondaryButton(
-                text = "Find a multiplayer table",
-                onClick = onPlayOnline,
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                GameModeTile("ONLINE ARENA", "Play with the world", "◎", Cyan, Modifier.weight(1f), onPlayOnline)
+                GameModeTile("PRACTICE", "Train vs CPU", "✦", Violet, Modifier.weight(1f), onPlayOffline)
+            }
 
+            Text("YOUR ARENA", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                HomeActionCard(
-                    title = "Friends",
-                    subtitle = "Your crew and invites",
-                    mark = "＋",
-                    onClick = onFriends,
-                    modifier = Modifier.weight(1f)
-                )
-                HomeActionCard(
-                    title = "Rewards & missions",
-                    subtitle = rewardSummary(
-                        isAuthenticated,
-                        dailyRewardCoins,
-                        dailyRewardAvailable,
-                        readyMissionCount
-                    ),
-                    mark = "✦",
-                    onClick = onDailyRewards,
-                    modifier = Modifier.weight(1f)
-                )
+                ShortcutTile("FRIENDS", "Crew & invites", "♟", Cyan, Modifier.weight(1f), onFriends)
+                ShortcutTile("REWARDS", rewardSummary(isAuthenticated, dailyRewardCoins, dailyRewardAvailable, readyMissionCount), "✦", Gold, Modifier.weight(1f), onDailyRewards)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                HomeActionCard(
-                    title = "Competition",
-                    subtitle = "Leaderboards & events",
-                    mark = "↗",
-                    onClick = onLeaderboard,
-                    modifier = Modifier.weight(1f)
-                )
-                HomeActionCard(
-                    title = "Settings",
-                    subtitle = "Audio, motion & display",
-                    mark = "⚙",
-                    onClick = onSettings,
-                    modifier = Modifier.weight(1f)
-                )
+                ShortcutTile("LEADERBOARD", "Ranks & events", "↗", Violet, Modifier.weight(1f), onLeaderboard)
+                ShortcutTile("NOTIFICATIONS", "Invites & updates", "◌", Cyan, Modifier.weight(1f), onNotifications)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                HomeActionCard(
-                    title = "Player profile",
-                    subtitle = "Your Arena identity",
-                    mark = "◉",
-                    onClick = onProfile,
-                    modifier = Modifier.weight(1f)
-                )
-                HomeActionCard(
-                    title = "Notifications",
-                    subtitle = "Invites and Arena activity",
-                    mark = "◌",
-                    onClick = onNotifications,
-                    modifier = Modifier.weight(1f)
-                )
+                ShortcutTile("SETTINGS", "Audio & display", "⚙", Muted, Modifier.weight(1f), onSettings)
+                ShortcutTile("HELP & SUPPORT", "Get assistance", "?", Violet, Modifier.weight(1f), onHelpSupport)
             }
-            HomeActionCard(
-                title = "Help & support",
-                subtitle = "Support tools coming soon",
-                mark = "?",
-                onClick = onHelpSupport,
-                modifier = Modifier.fillMaxWidth()
-            )
+
+            Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(20.dp), color = Panel) {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(if (isAuthenticated) "YOUR ARENA ID" else "SAVE YOUR PROGRESS", color = Muted, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
+                        Text(
+                            if (isAuthenticated) playerGamerId ?: playerUsername?.let { "@$it" } ?: "Complete your profile"
+                            else "Sign in to keep your stats, friends and rewards.",
+                            color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold
+                        )
+                    }
+                    TextButton(onClick = if (isAuthenticated) onProfile else onSignIn) {
+                        Text(if (isAuthenticated) "PROFILE" else "SIGN IN", color = Cyan, fontWeight = FontWeight.ExtraBold)
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
         }
     }
 }
 
 @Composable
-private fun HomeProfileActions(
-    isAuthenticated: Boolean,
-    onProfile: () -> Unit,
-    onSignIn: () -> Unit,
-    onSignOut: () -> Unit,
-    compact: Boolean = false
-) {
-    Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        horizontalAlignment = Alignment.End
+private fun CardFan() {
+    Row(Modifier.width(116.dp).height(76.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((-14).dp)) {
+        MiniCard("4", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -13f }.padding(top = 5.dp))
+        MiniCard("6", Color(0xFFFFC84D), Modifier.padding(bottom = 5.dp))
+        MiniCard("8", Color(0xFF48BDF5), Modifier.graphicsLayer { rotationZ = 13f }.padding(top = 5.dp))
+    }
+}
+
+@Composable
+private fun MiniCard(value: String, color: Color, modifier: Modifier = Modifier) {
+    Box(
+        modifier.size(39.dp, 59.dp).shadow(7.dp, RoundedCornerShape(9.dp)).clip(RoundedCornerShape(9.dp))
+            .background(Brush.linearGradient(listOf(color, color.copy(alpha = .78f))))
+            .border(1.dp, Color.White.copy(alpha = .85f), RoundedCornerShape(9.dp)),
+        contentAlignment = Alignment.Center
     ) {
-        ArenaSecondaryButton(
-            text = if (isAuthenticated) "Profile" else "Sign in",
-            onClick = if (isAuthenticated) onProfile else onSignIn
-        )
-        if (isAuthenticated && !compact) {
-            ArenaSecondaryButton(text = "Sign out", onClick = onSignOut)
+        Text(value, color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+private fun GameModeTile(title: String, subtitle: String, symbol: String, accent: Color, modifier: Modifier, onClick: () -> Unit) {
+    Card(modifier.heightIn(min = 116.dp).clickable(role = Role.Button, onClick = onClick), shape = RoundedCornerShape(22.dp), colors = CardDefaults.cardColors(containerColor = Panel), elevation = CardDefaults.cardElevation(5.dp)) {
+        Column(Modifier.fillMaxWidth().padding(15.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(symbol, color = accent, fontSize = 25.sp, fontWeight = FontWeight.Black)
+            Text(title, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = .4.sp)
+            Text(subtitle, color = Muted, fontSize = 10.sp)
         }
     }
 }
 
 @Composable
-private fun HomeActionCard(
-    title: String,
-    subtitle: String,
-    mark: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .heightIn(min = 88.dp)
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics(mergeDescendants = true) {},
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+private fun ShortcutTile(title: String, subtitle: String, symbol: String, accent: Color, modifier: Modifier, onClick: () -> Unit) {
+    Surface(
+        modifier.heightIn(min = 88.dp).clickable(role = Role.Button, onClick = onClick).semantics(mergeDescendants = true) {},
+        shape = RoundedCornerShape(18.dp), color = Panel,
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = .05f))
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                mark,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 13.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(symbol, color = accent, fontSize = 23.sp, fontWeight = FontWeight.Black)
             Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text(
-                    subtitle,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall
-                )
+                Text(title, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = .4.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(subtitle, color = Muted, fontSize = 9.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
         }
     }
 }
 
-private fun rewardSummary(
-    isAuthenticated: Boolean,
-    dailyRewardCoins: Int?,
-    dailyRewardAvailable: Boolean?,
-    readyMissionCount: Int?
-): String = when {
-    !isAuthenticated -> "Sign in to unlock rewards"
-    readyMissionCount != null && readyMissionCount > 0 ->
-        "$readyMissionCount mission reward${if (readyMissionCount == 1) "" else "s"} ready"
-    dailyRewardAvailable == true && dailyRewardCoins != null ->
-        "Claim $dailyRewardCoins coins today"
-    dailyRewardAvailable == true -> "Daily reward ready to claim"
-    dailyRewardAvailable == false -> "Daily rewards, missions & achievements"
-    else -> "Daily rewards, missions & achievements"
+private fun rewardSummary(isAuthenticated: Boolean, dailyRewardCoins: Int?, dailyRewardAvailable: Boolean?, readyMissionCount: Int?): String = when {
+    !isAuthenticated -> "Sign in to unlock"
+    readyMissionCount != null && readyMissionCount > 0 -> readyMissionCount.toString() + if (readyMissionCount == 1) " mission ready" else " missions ready"
+    dailyRewardAvailable == true && dailyRewardCoins != null -> "Claim " + dailyRewardCoins + " coins"
+    dailyRewardAvailable == true -> "Daily reward ready"
+    else -> "Missions & achievements"
 }
