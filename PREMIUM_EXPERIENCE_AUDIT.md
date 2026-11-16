@@ -285,3 +285,9 @@ These are relative estimates for an experienced Android developer familiar with 
 5. **Create original ArenaCards card and avatar artwork**, then validate it across light/dark themes, screen sizes, and performance budgets.
 
 **Audit boundary:** This document records source-inspection findings and proposals only. It does not certify rendered UI quality, accessibility conformance, performance, real-device behavior, Firebase integration, or production readiness.
+
+## Latest graphics implementation pass (2026-11-16)
+
+- The discard-pile reveal now adds a restrained depth/pitch response and subtle scale/shadow shaping during the existing card flip. The effect remains Compose-native (2.5D), requires no paid assets or 3D engine, and keeps a static path when reduced motion is enabled.
+- Existing hand-card drag tilt, lift, scale, selected treatment, and reduced-motion behavior remain in place. This is an incremental visual improvement, not a complete illustrated art pack, cinematic animation suite, or true 3D scene.
+- Remaining visual acceptance work: run visual review on supported screen sizes, validate yellow/green card contrast in both themes, profile animation on lower-end hardware, and complete TalkBack/font-scale/physical-device checks. No screenshot or real-device certification is claimed.
