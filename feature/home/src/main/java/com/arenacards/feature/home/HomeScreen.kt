@@ -1,5 +1,11 @@
 package com.arenacards.feature.home
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -245,12 +252,48 @@ private fun CardFan() {
 
 @Composable
 private fun MiniCard(value: String, color: Color, modifier: Modifier = Modifier) {
+    // Lightweight 3D-inspired idle motion: perspective tilt and a slow floating lift.
+    val motion = rememberInfiniteTransition(label = "arena-card-$value")
+    val tilt by motion.animateFloat(
+        initialValue = -4f,
+        targetValue = 4f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2_600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cardTilt"
+    )
+    val lift by motion.animateFloat(
+        initialValue = -2.5f,
+        targetValue = 2.5f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2_100, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "cardLift"
+    )
     Box(
-        modifier.size(39.dp, 59.dp).shadow(7.dp, RoundedCornerShape(9.dp)).clip(RoundedCornerShape(9.dp))
+        modifier
+            .graphicsLayer {
+                rotationX = tilt
+                rotationY = -tilt * .7f
+                translationY = lift * density
+                cameraDistance = 18f * density
+            }
+            .size(39.dp, 59.dp)
+            .shadow(9.dp, RoundedCornerShape(9.dp))
+            .clip(RoundedCornerShape(9.dp))
             .background(Brush.linearGradient(listOf(color, color.copy(alpha = .78f))))
-            .border(1.dp, Color.White.copy(alpha = .85f), RoundedCornerShape(9.dp)),
+            .border(1.dp, Color.White.copy(alpha = .9f), RoundedCornerShape(9.dp)),
         contentAlignment = Alignment.Center
     ) {
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.linearGradient(
+                    listOf(Color.White.copy(alpha = .22f), Color.Transparent, Color.Black.copy(alpha = .08f))
+                )
+            )
+        )
         Text(value, color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Black)
     }
 }
