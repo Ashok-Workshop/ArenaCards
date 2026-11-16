@@ -1,5 +1,6 @@
 package com.arenacards.feature.wallet
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -82,7 +83,7 @@ fun WalletScreen(
         }
 
         if (!isAuthenticated) {
-            ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+            ArenaPanel(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 Text("Sign in to access your server wallet.")
                 ArenaPrimaryButton(
                     text = "Sign in",
@@ -123,12 +124,18 @@ fun WalletScreen(
             }
         }
         account?.let { snapshot ->
-            ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+            ArenaPanel(
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
+                backgroundBrush = Brush.linearGradient(
+                    listOf(Color(0xFF344B86), Color(0xFF215C62), Color(0xFF172B49))
+                ),
+                contentColor = Color.White
+            ) {
                 Text("WALLET BALANCE", style = MaterialTheme.typography.labelLarge)
                 Text(
                     snapshot.wallet.coinsBalance.toString(),
                     modifier = Modifier.padding(top = 4.dp),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color.White,
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold
                 )
