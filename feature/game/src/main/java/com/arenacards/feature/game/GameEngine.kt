@@ -549,14 +549,13 @@ object GameEngine {
         activeColor: CardColor
     ): Int {
         val printedPoints = when {
-            card.isWildDrawFour -> WILD_CARD_SCORE
-            card.isWild -> WILD_CARD_SCORE
+            card.isWild -> 0
             card.value >= GameCard.SKIP -> ACTION_CARD_SCORE
             else -> card.value
         }
         val wildConservation = when {
-            card.isWildDrawFour -> 24
-            card.isWild -> 18
+            card.isWildDrawFour -> WILD_CARD_SCORE + 20
+            card.isWild -> WILD_CARD_SCORE
             else -> 0
         }
         return cpuCardPriority(card, nextPlayerCardCount, hand, activeColor) * 2 +
