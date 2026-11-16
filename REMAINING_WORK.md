@@ -72,8 +72,8 @@ This tracker reflects the repository after extending offline practice. “Implem
 
 - Added `.github/workflows/android-ci.yml` on `rebuild/phase-1-audit`. Pull requests targeting `main`, pushes to `main` and `rebuild/**`, and manual dispatch now run JDK 17 setup, Gradle unit tests, and a debug APK assembly.
 - The workflow creates a temporary placeholder `google-services.json` only when the file is absent, to satisfy the Google Services Gradle plugin during CI. It contains no real credentials and does not connect to Firebase or deploy anything.
-- The workflow has been committed but has not yet run successfully on GitHub; its first run is the validation gate. It does not replace emulator, instrumentation, physical-device, security, or production QA.
-- Branch comparison against `main` reports 52 commits ahead and 3 behind with divergent histories. No merge/rebase was attempted; inspect the three base-only commits and overlapping files before reconciling.
+- GitHub Actions validation has now passed for the Android workflow on commit `1f58fba` (unit tests, debug APK assembly, and artifact upload) and for Firebase Functions CI on commits `1f58fba` and `be49a2f` (Functions unit tests, Firestore rules emulator tests, and Functions emulator tests). A later Firebase run exposed a test-fixture mistake in the newly added moderation test; that fixture was corrected, and the rerun passed. A fresh Android run for `be49a2f` was still running at the time of this update. CI does not replace instrumentation, physical-device, security, or production QA.
+- Branch comparison against `main` reports 61 commits ahead and 3 behind with divergent histories. The three commits unique to `main` are a game-table visual upgrade, an immersive arena lobby refresh, and the merge of PR #3. No merge/rebase was attempted; inspect the three base-only commits and overlapping files before reconciling.
 
 ## Validation status
 
@@ -87,5 +87,5 @@ This tracker reflects the repository after extending offline practice. “Implem
 - `:feature:profile:testDebugUnitTest`: passed (11 tests; no profile source changes in this iteration).
 - `:app:assembleDebug`: passed after game source/UI changes and again after the final test-constructor correction.
 - Emulator testing used standard Firestore Emulator and local Node `24.22.1`; Functions target Node `22`. These tests do not establish Enterprise or production behavior.
-- No real-device playtest or production Firebase integration test was performed.
+- GitHub Actions Firebase CI on `be49a2f` passed after correcting the moderation authorization test fixture. The test suite now checks unauthenticated and ordinary-user denial plus invalid review inputs; the emulator scenario also exercises a moderator-claim review path. No real-device playtest or production Firebase integration test was performed.
 - Social/FCM/room-rule emulator tests do not verify production delivery, Enterprise Firestore, scheduled-job activation, physical-device UX, or App Check.
