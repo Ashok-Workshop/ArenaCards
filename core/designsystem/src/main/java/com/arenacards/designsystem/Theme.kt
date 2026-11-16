@@ -1,5 +1,6 @@
 package com.arenacards.designsystem
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
@@ -10,23 +11,30 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.isSystemInDarkTheme
 
+/**
+ * ArenaCards visual language: midnight arena, rich felt, electric teal and
+ * warm championship gold. Keep these tokens central so every feature shares
+ * one coherent game identity.
+ */
 object ArenaPalette {
-    val Navy = Color(0xFF0B1020)
-    val NavyRaised = Color(0xFF141B31)
-    val NavyElevated = Color(0xFF1C2540)
+    val Navy = Color(0xFF080E1D)
+    val NavyRaised = Color(0xFF111B30)
+    val NavyElevated = Color(0xFF1B2942)
     val Purple = Color(0xFF9A7BFF)
-    val Blue = Color(0xFF58B8FF)
-    val Gold = Color(0xFFFFD166)
-    val Red = Color(0xFFFF637B)
-    val Green = Color(0xFF52D6A0)
-    val Yellow = Color(0xFFFFD166)
-    val TextMuted = Color(0xFF9AA6C0)
+    val Blue = Color(0xFF62C5F4)
+    val Gold = Color(0xFFFFD477)
+    val Red = Color(0xFFFF657D)
+    val Green = Color(0xFF54DDB0)
+    val Yellow = Color(0xFFFFD477)
+    val TextMuted = Color(0xFFA6B4CC)
+    val Felt = Color(0xFF123E3B)
+    val FeltRaised = Color(0xFF19584D)
+    val Glass = Color(0x24FFFFFF)
 }
 
 object ArenaShapeTokens {
-    val Panel = 24.dp
+    val Panel = 26.dp
     val Button = 18.dp
     val Card = 17.dp
     val Compact = 12.dp
@@ -50,58 +58,72 @@ private val ArenaCardsDarkColors = darkColorScheme(
     onPrimary = Color.White,
     onSecondary = ArenaPalette.Navy,
     onTertiary = ArenaPalette.Navy,
-    onBackground = Color(0xFFF7F8FC),
-    onSurface = Color(0xFFF7F8FC),
-    onSurfaceVariant = Color(0xFFC1C9DA),
-    outline = Color(0xFF414B67)
+    onBackground = Color(0xFFF7F9FF),
+    onSurface = Color(0xFFF7F9FF),
+    onSurfaceVariant = Color(0xFFC2CDE0),
+    outline = Color(0xFF465674),
+    error = Color(0xFFFF7185)
 )
 
 private val ArenaCardsLightColors = lightColorScheme(
     primary = Color(0xFF6847D8),
-    secondary = Color(0xFF1678C7),
-    tertiary = Color(0xFFB77D00),
-    background = Color(0xFFF5F6FC),
-    surface = Color.White,
-    surfaceVariant = Color(0xFFE9ECF7),
+    secondary = Color(0xFF1678A8),
+    tertiary = Color(0xFF9B6900),
+    background = Color(0xFFF0F3F8),
+    surface = Color(0xFFFAFBFF),
+    surfaceVariant = Color(0xFFE4EAF2),
     onPrimary = Color.White,
     onSecondary = Color.White,
     onTertiary = Color.White,
-    onBackground = Color(0xFF151A2B),
-    onSurface = Color(0xFF151A2B),
-    onSurfaceVariant = Color(0xFF49536B),
-    outline = Color(0xFFCDD2E1)
+    onBackground = Color(0xFF121B2B),
+    onSurface = Color(0xFF121B2B),
+    onSurfaceVariant = Color(0xFF46536A),
+    outline = Color(0xFFC4CEDC),
+    error = Color(0xFFB3263B)
 )
 
+private val BaseTypography = Typography()
 private val ArenaTypography = Typography(
-    displayLarge = androidx.compose.material3.Typography().displayLarge.copy(
+    displayLarge = BaseTypography.displayLarge.copy(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Black,
+        letterSpacing = (-1.8).sp
+    ),
+    displayMedium = BaseTypography.displayMedium.copy(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.ExtraBold,
-        letterSpacing = (-1.5).sp
+        letterSpacing = (-1.1).sp
     ),
-    headlineLarge = androidx.compose.material3.Typography().headlineLarge.copy(
+    headlineLarge = BaseTypography.headlineLarge.copy(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.ExtraBold,
+        letterSpacing = (-0.8).sp
+    ),
+    headlineMedium = BaseTypography.headlineMedium.copy(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
-        letterSpacing = (-0.5).sp
+        letterSpacing = (-0.35).sp
     ),
-    headlineMedium = androidx.compose.material3.Typography().headlineMedium.copy(
+    titleLarge = BaseTypography.titleLarge.copy(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold
     ),
-    titleLarge = androidx.compose.material3.Typography().titleLarge.copy(
+    titleMedium = BaseTypography.titleMedium.copy(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold
     ),
-    bodyLarge = androidx.compose.material3.Typography().bodyLarge.copy(
+    bodyLarge = BaseTypography.bodyLarge.copy(
         fontFamily = FontFamily.SansSerif,
-        lineHeight = 24.sp
+        lineHeight = 25.sp
     ),
-    bodyMedium = androidx.compose.material3.Typography().bodyMedium.copy(
+    bodyMedium = BaseTypography.bodyMedium.copy(
         fontFamily = FontFamily.SansSerif,
-        lineHeight = 21.sp
+        lineHeight = 22.sp
     ),
-    labelLarge = androidx.compose.material3.Typography().labelLarge.copy(
+    labelLarge = BaseTypography.labelLarge.copy(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold
+        fontWeight = FontWeight.Bold,
+        letterSpacing = 0.25.sp
     )
 )
 
