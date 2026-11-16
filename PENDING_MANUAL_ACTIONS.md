@@ -1,8 +1,15 @@
 # ArenaCards pending manual actions
 
-Updated: 2026-11-14
+Updated: 2026-11-16
 
 These are owner actions. No Firebase deployment, billing activation, or production-data changes have been performed.
+
+
+## Latest automated validation (2026-11-16)
+
+- Android GitHub Actions run on commit `4138c44` passed unit tests and debug APK assembly after lifecycle-aware Flow collection was added to the app root, game, auth, profile, and leaderboard screens.
+- Firebase Functions CI passed on commit `ae11798`: Node.js unit tests, Firestore rules emulator tests, and Functions emulator tests. The suite includes moderator/admin report review authorization, report idempotency, self-report/invalid-reason rejection, and report rate-limit coverage.
+- These CI checks are source-level validation only. They do not establish production Firebase deployment, live FCM delivery, physical-device QA, accessibility certification, or Play Store readiness.
 
 ## Before building from a fresh clone
 
