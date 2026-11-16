@@ -1,6 +1,6 @@
 # ArenaCards remaining work
 
-Updated: 2026-11-14
+Updated: 2026-11-16
 
 This tracker reflects the repository after extending offline practice. “Implemented” means source and tests exist; it does not imply production Firebase deployment, real-device verification, or Play Store readiness.
 
@@ -66,6 +66,14 @@ This tracker reflects the repository after extending offline practice. “Implem
 - Leaderboard/tournament, chat, profile, wallet, and social screen presentation received incremental branded-header, podium/bracket, contrast, and state-transition refinements. The card-back accessibility test was extended.
 - These are source changes on `rebuild/phase-1-audit`; no fresh Gradle build or test run was available in this pass. Do not mark the new CPU test or UI test as executed until a supported Android build environment runs them.
 - The branch is intentionally not merged. It has diverged from `main`; reconcile the three base-only commits before preparing a merge.
+
+
+### Latest automation pass (2026-11-16)
+
+- Added `.github/workflows/android-ci.yml` on `rebuild/phase-1-audit`. Pull requests targeting `main`, pushes to `main` and `rebuild/**`, and manual dispatch now run JDK 17 setup, Gradle unit tests, and a debug APK assembly.
+- The workflow creates a temporary placeholder `google-services.json` only when the file is absent, to satisfy the Google Services Gradle plugin during CI. It contains no real credentials and does not connect to Firebase or deploy anything.
+- The workflow has been committed but has not yet run successfully on GitHub; its first run is the validation gate. It does not replace emulator, instrumentation, physical-device, security, or production QA.
+- Branch comparison against `main` reports 52 commits ahead and 3 behind with divergent histories. No merge/rebase was attempted; inspect the three base-only commits and overlapping files before reconciling.
 
 ## Validation status
 
