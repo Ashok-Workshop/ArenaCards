@@ -115,7 +115,7 @@ fun LeaderboardScreen(
                 CircularProgressIndicator()
             }
         } else if (state.errorMessage != null && state.leaderboard == null) {
-            ArenaPanel(Modifier.fillMaxWidth()) {
+            ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                 state.errorMessage?.let { message ->
                     Text(message, color = MaterialTheme.colorScheme.error)
                 }
