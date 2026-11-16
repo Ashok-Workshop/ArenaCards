@@ -63,6 +63,7 @@ import com.arenacards.data.FirebaseAuthRepository
 import com.arenacards.data.FirebasePlayerProfileRepository
 import com.arenacards.data.FirebaseWalletRepository
 import com.arenacards.data.FirebaseMultiplayerRepository
+import com.arenacards.data.FirebaseNotificationDeviceId
 import com.arenacards.data.FirebaseSocialRepository
 import com.arenacards.data.FirebaseCompetitiveRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -422,7 +423,28 @@ private fun ArenaCardsApp(
                 onSignIn = {
                     navController.navigate(ArenaCardsDestinations.auth("welcome"))
                 },
-                onSignOut = authViewModel::signOut,
+                onSignOut = {
+                    coroutineScope.launch {
+                        try {
+                            socialRepository.removeNotificationToken(
+                                FirebaseNotificationDeviceId.get(context)
+                            )
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (error: Exception) {
+                            Log.w("ArenaCardsNotifications", "Could not remove this device's push token during sign-out.", error)
+                        }
+                        try {
+                            socialRepository.updatePresence(foreground = false)
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (error: Exception) {
+                            Log.w("ArenaCardsPresence", "Could not mark player offline during sign-out.", error)
+                        } finally {
+                            authViewModel.signOut()
+                        }
+                    }
+                },
                 playerName = activeProfile?.displayName ?: authState.user?.displayName,
                 playerUsername = activeProfile?.username,
                 playerGamerId = activeProfile?.gamerId,
