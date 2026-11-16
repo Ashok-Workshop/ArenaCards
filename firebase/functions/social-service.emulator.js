@@ -317,6 +317,31 @@ test("private and room chat enforce membership, blocks, limits, reporting and no
       requestId: "report-request-001",
     }));
     assert.equal((await service.listReports(request(uids[1]))).reports.length, 1);
+    const duplicateReport = await service.reportPlayer(request(uids[1], {
+      reportedUid: uids[0],
+      reason: "SPAM",
+      details: "Repeated unsolicited messages",
+      messageId: sent.messageId,
+      requestId: "report-request-001",
+    }));
+    assert.equal(duplicateReport.submitted, true);
+    assert.equal((await service.listReports(request(uids[1]))).reports.length, 1);
+    await assert.rejects(
+      service.reportPlayer(request(uids[1], {
+        reportedUid: uids[1],
+        reason: "SPAM",
+        requestId: "report-self-0001",
+      })),
+      (error) => error.code === "invalid-argument"
+    );
+    await assert.rejects(
+      service.reportPlayer(request(uids[1], {
+        reportedUid: uids[0],
+        reason: "NOT_A_REASON",
+        requestId: "report-invalid-01",
+      })),
+      (error) => error.code === "invalid-argument"
+    );
     await assert.rejects(
       service.reviewReport(request(uids[0], {
         reportId: `${uids[1]}_report-request-001`,
