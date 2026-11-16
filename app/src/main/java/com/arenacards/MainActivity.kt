@@ -438,7 +438,8 @@ private fun ArenaCardsApp(
                 dailyRewardCoins = walletState.account?.dailyReward?.nextRewardCoins,
                 dailyRewardAvailable = walletState.account?.dailyReward?.claimAvailable,
                 readyMissionCount = walletState.account?.missions
-                    ?.count { it.completed && !it.claimed }
+                    ?.count { it.completed && !it.claimed },
+                reducedMotion = settings.reducedMotionEnabled
             )
         }
         composable(ArenaCardsDestinations.PROFILE_GATE) {
