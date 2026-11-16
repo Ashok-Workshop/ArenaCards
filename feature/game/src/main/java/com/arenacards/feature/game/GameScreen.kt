@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -384,9 +385,17 @@ fun ArenaCardsGameScreen(
                         items = state.playerCards,
                         key = { index, card -> card.id.ifBlank { "legacy-hand-$index" } }
                     ) { index, card ->
+                        val handCenter = (state.playerCards.lastIndex / 2f)
+                        val fanOffset = index - handCenter
                         ArenaCardTile(
                             color = card.color.toArenaColor(),
                             value = card.value,
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (settings.reducedMotionEnabled) 0f
+                                else (fanOffset * 1.15f).coerceIn(-5f, 5f)
+                                translationY = if (settings.reducedMotionEnabled) 0f
+                                else (kotlin.math.abs(fanOffset) * 1.4f).dp.toPx()
+                            },
                             selected = state.selectedCardIndex == index,
                             enabled = index in state.playableCardIndices,
                             onClick = { playCard(index) },
