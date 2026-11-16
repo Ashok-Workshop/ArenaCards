@@ -1,5 +1,6 @@
 package com.arenacards.feature.profile
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -382,7 +383,7 @@ private fun ProfileSummary(
     onContinueHome: () -> Unit
 ) {
     ArenaPanel(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
         backgroundBrush = androidx.compose.ui.graphics.Brush.linearGradient(
             listOf(ArenaPalette.Purple.copy(alpha = 0.26f), ArenaPalette.Blue.copy(alpha = 0.18f))
         )
@@ -456,7 +457,7 @@ private fun ProfileStatCard(
     value: Long,
     modifier: Modifier = Modifier
 ) {
-    ArenaPanel(modifier = modifier) {
+    ArenaPanel(modifier = modifier.animateContentSize()) {
         Text(
             text = value.toString(),
             style = MaterialTheme.typography.headlineSmall,
