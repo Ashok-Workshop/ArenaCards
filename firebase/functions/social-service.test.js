@@ -23,7 +23,7 @@ test("report review requires a server-issued moderator or admin claim", async ()
     (error) => error.code === "unauthenticated"
   );
 
-  for (const token of [{}, { moderator: false }, { admin: false }, { moderator: true, admin: false }]) {
+  for (const token of [{}, { moderator: false }, { admin: false }, { moderator: false, admin: false }]) {
     await assert.rejects(
       service.reviewReport(request("ordinary-player", token, {
         reportId: "report-0001",
