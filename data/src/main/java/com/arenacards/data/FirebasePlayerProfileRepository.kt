@@ -4,9 +4,9 @@ import com.arenacards.feature.profile.PlayerProfile
 import com.arenacards.feature.profile.PlayerProfileRepository
 import com.arenacards.feature.profile.ProfileVisibility
 import com.arenacards.feature.profile.PublicPlayer
+import com.google.firebase.FirebaseApp
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
@@ -16,9 +16,13 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class FirebasePlayerProfileRepository : PlayerProfileRepository {
-    private val auth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
-    private val functions = FirebaseFunctions.getInstance()
+    private val firebaseApp = FirebaseApp.getInstance()
+    private val auth = FirebaseAuth.getInstance(firebaseApp)
+    private val firestore = FirebaseFirestoreProvider.getInstance(firebaseApp)
+    private val functions = FirebaseFunctions.getInstance(
+        firebaseApp,
+        FirebaseBackendConfig.FUNCTIONS_REGION
+    )
 
     override fun observeMyProfile(uid: String): Flow<PlayerProfile?> = callbackFlow {
         requireCurrentUid(uid)

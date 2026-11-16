@@ -7,7 +7,8 @@ enum class CardColor { RED, BLUE, GREEN, YELLOW, WILD }
 data class GameCard(
     val color: CardColor,
     val value: Int,
-    val isWild: Boolean = false
+    val isWild: Boolean = false,
+    val id: String = ""
 ) {
     val isWildDrawFour: Boolean
         get() = isWild && value == WILD_DRAW_FOUR
@@ -28,6 +29,17 @@ data class CpuDecision(
     val chosenColor: CardColor? = null
 )
 
+data class WildDrawFourChallenge(
+    val offenderIndex: Int,
+    val targetIndex: Int,
+    val offenderHadActiveColor: Boolean
+)
+
+data class UnoCallWindow(
+    val offenderIndex: Int,
+    val deadlineMillis: Long
+)
+
 data class GameSession(
     val hands: List<List<GameCard>>,
     val drawPile: List<GameCard>,
@@ -40,7 +52,9 @@ data class GameSession(
     val isPaused: Boolean = false,
     val hasDrawnThisTurn: Boolean = false,
     val drawnCardIndex: Int? = null,
-    val consecutiveUnplayedTurns: Int = 0
+    val consecutiveUnplayedTurns: Int = 0,
+    val pendingWildDrawFourChallenge: WildDrawFourChallenge? = null,
+    val pendingUnoCall: UnoCallWindow? = null
 ) {
     val isOver: Boolean
         get() = winnerIndex != null || isDraw
@@ -59,20 +73,24 @@ object GameEngine {
 
     fun createDeck(random: Random = Random.Default): List<GameCard> {
         val deck = mutableListOf<GameCard>()
+        var cardId = 0
+        fun addCard(color: CardColor, value: Int, isWild: Boolean = false) {
+            deck += GameCard(color, value, isWild, "arena-card-${cardId++}")
+        }
         for (color in playableColors) {
-            deck += GameCard(color, 0)
+            addCard(color, 0)
             for (value in 1..9) {
-                repeat(2) { deck += GameCard(color, value) }
+                repeat(2) { addCard(color, value) }
             }
             repeat(2) {
-                deck += GameCard(color, GameCard.SKIP)
-                deck += GameCard(color, GameCard.REVERSE)
-                deck += GameCard(color, GameCard.DRAW_TWO)
+                addCard(color, GameCard.SKIP)
+                addCard(color, GameCard.REVERSE)
+                addCard(color, GameCard.DRAW_TWO)
             }
         }
         repeat(4) {
-            deck += GameCard(CardColor.WILD, GameCard.WILD, isWild = true)
-            deck += GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, isWild = true)
+            addCard(CardColor.WILD, GameCard.WILD, isWild = true)
+            addCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, isWild = true)
         }
         return deck.shuffled(random)
     }
@@ -130,17 +148,14 @@ object GameEngine {
     fun isPlayable(
         topCard: GameCard,
         candidate: GameCard,
-        activeColor: CardColor,
-        hand: List<GameCard>
+        activeColor: CardColor
     ): Boolean {
-        if (candidate.isWildDrawFour && hand.any {
-                it !== candidate && !it.isWild && it.color == activeColor
-            }
-        ) {
-            return false
-        }
+        if (candidate.isWildDrawFour) return true
         return candidate.isWild || candidate.color == activeColor || candidate.value == topCard.value
     }
+
+    fun isWildDrawFourLegal(activeColor: CardColor, hand: List<GameCard>): Boolean =
+        hand.none { !it.isWild && it.color == activeColor }
 
     fun calculateScore(cards: List<GameCard>): Int = cards.sumOf { card ->
         when {
@@ -155,7 +170,8 @@ object GameEngine {
         playerIndex: Int,
         cardIndex: Int,
         chosenColor: CardColor? = null,
-        random: Random = Random.Default
+        random: Random = Random.Default,
+        nowMillis: Long = System.currentTimeMillis()
     ): GameSession? {
         if (!session.canAct(playerIndex) || session.isOver) return null
         val hand = session.hands[playerIndex]
@@ -166,29 +182,22 @@ object GameEngine {
         ) {
             return null
         }
-        if (!isPlayable(session.topCard, card, session.activeColor, hand)) return null
+        if (!isPlayable(session.topCard, card, session.activeColor)) return null
         if (card.isWild && chosenColor !in playableColors) return null
 
+        val offenderHadActiveColor = hand.any {
+            !it.isWild && it.color == session.activeColor
+        }
         val updatedHands = session.hands.map { it.toMutableList() }
         updatedHands[playerIndex].removeAt(cardIndex)
-        if (updatedHands[playerIndex].isEmpty()) {
-            return session.copy(
-                hands = updatedHands,
-                discardPile = session.discardPile + card,
-                activeColor = chosenColor ?: card.color,
-                winnerIndex = playerIndex,
-                hasDrawnThisTurn = false,
-                drawnCardIndex = null,
-                consecutiveUnplayedTurns = 0
-            )
-        }
 
         var direction = session.direction
         var nextPlayer = session.nextPlayer(playerIndex)
         var updatedDrawPile = session.drawPile
         var updatedDiscardPile = session.discardPile + card
-        var nextActiveColor = chosenColor ?: card.color
-        var noPlayTurns = 0
+        val nextActiveColor = chosenColor ?: card.color
+        val noPlayTurns = 0
+        var pendingChallenge: WildDrawFourChallenge? = null
 
         when (card.value) {
             GameCard.SKIP -> nextPlayer = session.nextPlayer(nextPlayer)
@@ -200,15 +209,21 @@ object GameEngine {
                     (playerIndex + direction + session.hands.size) % session.hands.size
                 }
             }
-            GameCard.DRAW_TWO, GameCard.WILD_DRAW_FOUR -> {
+            GameCard.WILD_DRAW_FOUR -> {
+                pendingChallenge = WildDrawFourChallenge(
+                    offenderIndex = playerIndex,
+                    targetIndex = nextPlayer,
+                    offenderHadActiveColor = offenderHadActiveColor
+                )
+            }
+            GameCard.DRAW_TWO -> {
                 val target = nextPlayer
-                val penalty = if (card.value == GameCard.DRAW_TWO) 2 else 4
                 val drawResult = drawCards(
                     hands = updatedHands,
                     drawPile = updatedDrawPile,
                     discardPile = updatedDiscardPile,
                     playerIndex = target,
-                    count = penalty,
+                    count = 2,
                     random = random
                 )
                 updatedDrawPile = drawResult.drawPile
@@ -217,6 +232,9 @@ object GameEngine {
             }
         }
 
+        val winnerIndex = playerIndex.takeIf {
+            updatedHands[playerIndex].isEmpty() && pendingChallenge == null
+        }
         return session.copy(
             hands = updatedHands,
             drawPile = updatedDrawPile,
@@ -224,10 +242,124 @@ object GameEngine {
             currentPlayerIndex = nextPlayer,
             direction = direction,
             activeColor = nextActiveColor,
+            winnerIndex = winnerIndex,
             hasDrawnThisTurn = false,
             drawnCardIndex = null,
-            consecutiveUnplayedTurns = noPlayTurns
+            consecutiveUnplayedTurns = noPlayTurns,
+            pendingWildDrawFourChallenge = pendingChallenge,
+            pendingUnoCall = if (updatedHands[playerIndex].size == 1) {
+                UnoCallWindow(playerIndex, nowMillis + UNO_CALL_WINDOW_MILLIS)
+            } else {
+                null
+            }
         )
+    }
+
+    fun announceUno(
+        session: GameSession,
+        playerIndex: Int,
+        nowMillis: Long = System.currentTimeMillis()
+    ): GameSession? {
+        val pending = session.pendingUnoCall ?: return null
+        if (session.isPaused || session.isOver || pending.offenderIndex != playerIndex ||
+            playerIndex !in session.hands.indices ||
+            session.hands[playerIndex].size != 1 || nowMillis > pending.deadlineMillis
+        ) {
+            return null
+        }
+        return session.copy(pendingUnoCall = null)
+    }
+
+    fun catchMissedUno(
+        session: GameSession,
+        catcherIndex: Int,
+        nowMillis: Long = System.currentTimeMillis(),
+        random: Random = Random.Default
+    ): GameSession? {
+        val pending = session.pendingUnoCall ?: return null
+        if (session.isPaused || session.isOver || catcherIndex !in session.hands.indices ||
+            catcherIndex == pending.offenderIndex || pending.offenderIndex !in session.hands.indices ||
+            session.hands[pending.offenderIndex].size != 1 || nowMillis > pending.deadlineMillis
+        ) {
+            return null
+        }
+        val drawn = drawCards(
+            hands = session.hands.map { it.toMutableList() },
+            drawPile = session.drawPile,
+            discardPile = session.discardPile,
+            playerIndex = pending.offenderIndex,
+            count = UNO_MISSED_CALL_PENALTY,
+            random = random
+        )
+        return session.copy(
+            hands = drawn.hands,
+            drawPile = drawn.drawPile,
+            discardPile = drawn.discardPile,
+            pendingUnoCall = null
+        )
+    }
+
+    fun resolveWildDrawFourChallenge(
+        session: GameSession,
+        playerIndex: Int,
+        challenge: Boolean,
+        random: Random = Random.Default
+    ): GameSession? {
+        val pending = session.pendingWildDrawFourChallenge ?: return null
+        if (session.isPaused || playerIndex != pending.targetIndex ||
+            session.currentPlayerIndex != pending.targetIndex || session.isOver
+        ) {
+            return null
+        }
+
+        val challengeSucceeded = challenge && pending.offenderHadActiveColor
+        val penaltyTarget = if (challengeSucceeded) {
+            pending.offenderIndex
+        } else {
+            pending.targetIndex
+        }
+        val penaltyCount = if (challenge && !challengeSucceeded) 6 else 4
+        val drawn = drawCards(
+            hands = session.hands.map { it.toMutableList() },
+            drawPile = session.drawPile,
+            discardPile = session.discardPile,
+            playerIndex = penaltyTarget,
+            count = penaltyCount,
+            random = random
+        )
+        val nextPlayer = if (challengeSucceeded) {
+            pending.targetIndex
+        } else {
+            session.nextPlayer(pending.targetIndex)
+        }
+        val winnerIndex = pending.offenderIndex.takeIf {
+            !challengeSucceeded && drawn.hands[it].isEmpty()
+        }
+
+        return session.copy(
+            hands = drawn.hands,
+            drawPile = drawn.drawPile,
+            discardPile = drawn.discardPile,
+            currentPlayerIndex = nextPlayer,
+            winnerIndex = winnerIndex,
+            hasDrawnThisTurn = false,
+            drawnCardIndex = null,
+            consecutiveUnplayedTurns = 0,
+            pendingWildDrawFourChallenge = null,
+            pendingUnoCall = null
+        )
+    }
+
+    fun shouldCpuChallenge(
+        difficulty: CpuDifficulty,
+        random: Random = Random.Default
+    ): Boolean {
+        val challengeChance = when (difficulty) {
+            CpuDifficulty.EASY -> 1
+            CpuDifficulty.MEDIUM -> 2
+            CpuDifficulty.HARD -> 3
+        }
+        return random.nextInt(CPU_CHALLENGE_ROLLS) < challengeChance
     }
 
     fun drawForCurrentPlayer(
@@ -280,7 +412,9 @@ object GameEngine {
         random: Random = Random.Default
     ): CpuDecision? {
         val playable = hand.indices.filter { index ->
-            isPlayable(topCard, hand[index], activeColor, hand)
+            val card = hand[index]
+            isPlayable(topCard, card, activeColor) &&
+                (!card.isWildDrawFour || isWildDrawFourLegal(activeColor, hand))
         }
         if (playable.isEmpty()) return null
 
@@ -316,14 +450,23 @@ object GameEngine {
         session.hasDrawnThisTurn.toString(),
         session.drawnCardIndex?.toString() ?: "-1",
         session.consecutiveUnplayedTurns.toString(),
-        session.hands.joinToString(HAND_SEPARATOR) { hand -> hand.joinToString(CARD_SEPARATOR, transform = ::encodeCard) },
+        session.hands.joinToString(HAND_SEPARATOR) { hand ->
+            if (hand.isEmpty()) EMPTY_HAND
+            else hand.joinToString(CARD_SEPARATOR, transform = ::encodeCard)
+        },
         session.drawPile.joinToString(CARD_SEPARATOR, transform = ::encodeCard),
-        session.discardPile.joinToString(CARD_SEPARATOR, transform = ::encodeCard)
+        session.discardPile.joinToString(CARD_SEPARATOR, transform = ::encodeCard),
+        session.pendingWildDrawFourChallenge?.let {
+            "${it.offenderIndex},${it.targetIndex},${it.offenderHadActiveColor}"
+        } ?: NO_CHALLENGE,
+        session.pendingUnoCall?.let {
+            "${it.offenderIndex},${it.deadlineMillis}"
+        } ?: NO_CHALLENGE
     ).joinToString(SESSION_SEPARATOR)
 
     fun decodeSession(encoded: String): GameSession? {
         val parts = encoded.split(SESSION_SEPARATOR)
-        if (parts.size != SESSION_PART_COUNT) return null
+        if (parts.size !in LEGACY_SESSION_PART_COUNT..SESSION_PART_COUNT) return null
         val currentPlayer = parts[0].toIntOrNull() ?: return null
         val direction = parts[1].toIntOrNull() ?: return null
         val color = parts[2].toEnumOrNull<CardColor>() ?: return null
@@ -333,14 +476,49 @@ object GameEngine {
         val hasDrawn = parts[6].toBooleanStrictOrNull() ?: return null
         val drawnIndex = parts[7].toIntOrNull()?.takeIf { it >= 0 }
         val noPlayTurns = parts[8].toIntOrNull()?.takeIf { it >= 0 } ?: return null
-        val hands = parts[9].split(HAND_SEPARATOR).map { hand -> decodeCards(hand) ?: return null }
+        val hands = parts[9].split(HAND_SEPARATOR).map { hand ->
+            if (hand == EMPTY_HAND) emptyList()
+            else decodeCards(hand) ?: return null
+        }
         val drawPile = decodeCards(parts[10]) ?: return null
         val discardPile = decodeCards(parts[11]) ?: return null
+        val pendingChallenge = if (parts.size >= SESSION_PART_COUNT_WITH_CHALLENGE &&
+            parts[12] != NO_CHALLENGE
+        ) {
+            val challenge = parts[12].split(',')
+            if (challenge.size != CHALLENGE_PART_COUNT) return null
+            WildDrawFourChallenge(
+                offenderIndex = challenge[0].toIntOrNull() ?: return null,
+                targetIndex = challenge[1].toIntOrNull() ?: return null,
+                offenderHadActiveColor = challenge[2].toBooleanStrictOrNull() ?: return null
+            )
+        } else {
+            null
+        }
+        val pendingUno = if (parts.size == SESSION_PART_COUNT && parts[13] != NO_CHALLENGE) {
+            val uno = parts[13].split(',')
+            if (uno.size != UNO_PART_COUNT) return null
+            UnoCallWindow(
+                offenderIndex = uno[0].toIntOrNull() ?: return null,
+                deadlineMillis = uno[1].toLongOrNull()?.takeIf { it >= 0L } ?: return null
+            )
+        } else {
+            null
+        }
 
         if (hands.size !in 2..4 || currentPlayer !in hands.indices ||
             direction !in setOf(-1, 1) || discardPile.isEmpty() ||
             winner?.let { it !in hands.indices } == true ||
-            drawnIndex?.let { it !in hands[currentPlayer].indices } == true
+            drawnIndex?.let { it !in hands[currentPlayer].indices } == true ||
+            (pendingChallenge != null &&
+                (pendingChallenge.offenderIndex !in hands.indices ||
+                    pendingChallenge.targetIndex !in hands.indices ||
+                    pendingChallenge.targetIndex != currentPlayer ||
+                    winner != null || isDraw))
+            || (pendingUno != null &&
+                (pendingUno.offenderIndex !in hands.indices ||
+                    hands[pendingUno.offenderIndex].size != 1 ||
+                    winner != null || isDraw))
         ) {
             return null
         }
@@ -356,7 +534,9 @@ object GameEngine {
             isPaused = isPaused,
             hasDrawnThisTurn = hasDrawn,
             drawnCardIndex = drawnIndex,
-            consecutiveUnplayedTurns = noPlayTurns
+            consecutiveUnplayedTurns = noPlayTurns,
+            pendingWildDrawFourChallenge = pendingChallenge,
+            pendingUnoCall = pendingUno
         )
     }
 
@@ -401,7 +581,8 @@ object GameEngine {
     }
 
     private fun GameSession.canAct(playerIndex: Int): Boolean =
-        !isPaused && currentPlayerIndex == playerIndex && playerIndex in hands.indices
+        !isPaused && pendingWildDrawFourChallenge == null && pendingUnoCall == null &&
+            currentPlayerIndex == playerIndex && playerIndex in hands.indices
 
     private fun GameSession.nextPlayer(from: Int, turnDirection: Int = direction): Int =
         (from + turnDirection + hands.size) % hands.size
@@ -412,14 +593,18 @@ object GameEngine {
         val discardPile: List<GameCard>
     )
 
-    private fun encodeCard(card: GameCard): String =
-        "${card.color.name},${card.value},${card.isWild}"
+    private fun encodeCard(card: GameCard): String = listOfNotNull(
+        card.color.name,
+        card.value.toString(),
+        card.isWild.toString(),
+        card.id.takeIf(String::isNotBlank)
+    ).joinToString(",")
 
     private fun decodeCards(encoded: String): List<GameCard>? {
         if (encoded.isEmpty()) return emptyList()
         return encoded.split(CARD_SEPARATOR).map { token ->
             val fields = token.split(',')
-            if (fields.size != CARD_PART_COUNT) return null
+            if (fields.size !in CARD_PART_COUNT..CARD_PART_COUNT_WITH_ID) return null
             val color = fields[0].toEnumOrNull<CardColor>() ?: return null
             val value = fields[1].toIntOrNull() ?: return null
             val wild = fields[2].toBooleanStrictOrNull() ?: return null
@@ -430,7 +615,9 @@ object GameEngine {
             ) {
                 return null
             }
-            GameCard(color, value, wild)
+            val id = fields.getOrNull(CARD_PART_COUNT)?.takeIf(String::isNotBlank).orEmpty()
+            if (id.any { it in "$CARD_SEPARATOR$HAND_SEPARATOR," }) return null
+            GameCard(color, value, wild, id)
         }
     }
 
@@ -440,8 +627,18 @@ object GameEngine {
     private const val INITIAL_HAND_SIZE = 7
     private const val ACTION_CARD_SCORE = 20
     private const val WILD_CARD_SCORE = 50
-    private const val SESSION_PART_COUNT = 12
+    const val UNO_CALL_WINDOW_MILLIS = 10_000L
+    const val UNO_MISSED_CALL_PENALTY = 2
+    private const val SESSION_PART_COUNT = 14
+    private const val LEGACY_SESSION_PART_COUNT = 12
+    private const val SESSION_PART_COUNT_WITH_CHALLENGE = 13
     private const val CARD_PART_COUNT = 3
+    private const val CARD_PART_COUNT_WITH_ID = 4
+    private const val CHALLENGE_PART_COUNT = 3
+    private const val UNO_PART_COUNT = 2
+    private const val CPU_CHALLENGE_ROLLS = 4
+    private const val EMPTY_HAND = "_"
+    private const val NO_CHALLENGE = "-"
     private const val SESSION_SEPARATOR = "|"
     private const val HAND_SEPARATOR = ";"
     private const val CARD_SEPARATOR = ":"

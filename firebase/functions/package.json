@@ -6,9 +6,11 @@
     "node": "22"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "test:emulator": "node --test profile-functions.emulator.js wallet-service.emulator.js multiplayer-service.emulator.js social-service.emulator.js competitive-service.emulator.js"
   },
   "dependencies": {
+    "@google-cloud/firestore": "^9.4.1",
     "bad-words": "^3.0.4",
     "firebase-admin": "^14.5.1",
     "firebase-functions": "^7.4.0"

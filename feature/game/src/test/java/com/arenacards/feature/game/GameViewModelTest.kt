@@ -8,6 +8,17 @@ import org.junit.Test
 
 class GameViewModelTest {
     @Test
+    fun seededViewModelsStartWithTheSameSession() {
+        val first = GameViewModel(SavedStateHandle(), Random(7))
+        val second = GameViewModel(SavedStateHandle(), Random(7))
+
+        assertEquals(
+            first.uiState.value.copy(matchId = "", matchDurationMillis = 0L),
+            second.uiState.value.copy(matchId = "", matchDurationMillis = 0L)
+        )
+    }
+
+    @Test
     fun startNewGameSupportsTwoThroughFourSeats() {
         val viewModel = GameViewModel(SavedStateHandle(), Random(1))
 
@@ -69,5 +80,39 @@ class GameViewModelTest {
 
         assertEquals(1, viewModel.uiState.value.opponents.size)
         assertEquals(7, viewModel.uiState.value.opponents.single().cardCount)
+    }
+
+    @Test
+    fun restoredPendingWildDrawFourCanBeChallengedFromTheUiState() {
+        val savedState = SavedStateHandle()
+        val pending = GameSession(
+            hands = listOf(
+                listOf(GameCard(CardColor.BLUE, 1)),
+                listOf(GameCard(CardColor.RED, 2)),
+                listOf(GameCard(CardColor.GREEN, 3))
+            ),
+            drawPile = (4..12).map { GameCard(CardColor.YELLOW, it) },
+            discardPile = listOf(
+                GameCard(CardColor.RED, 5),
+                GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, isWild = true)
+            ),
+            currentPlayerIndex = 0,
+            direction = 1,
+            activeColor = CardColor.BLUE,
+            pendingWildDrawFourChallenge = WildDrawFourChallenge(
+                offenderIndex = 1,
+                targetIndex = 0,
+                offenderHadActiveColor = true
+            )
+        )
+        savedState["offline_game_session"] = GameEngine.encodeSession(pending)
+        val viewModel = GameViewModel(savedState, Random(23))
+        assertTrue(viewModel.uiState.value.wildDrawFourChallengeAvailable)
+
+        viewModel.respondToWildDrawFourChallenge(challenge = true)
+
+        assertTrue(!viewModel.uiState.value.wildDrawFourChallengeAvailable)
+        assertEquals(0, viewModel.uiState.value.currentPlayerIndex)
+        assertEquals(5, viewModel.uiState.value.opponents[0].cardCount)
     }
 }

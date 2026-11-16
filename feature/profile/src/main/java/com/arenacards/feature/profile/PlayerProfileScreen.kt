@@ -10,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AssistChip
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -42,19 +42,18 @@ import java.text.DateFormat
 import java.util.Date
 
 private data class AvatarOption(
-    val id: String,
-    val symbol: String
+    val id: String
 )
 
 private val avatarOptions = listOf(
-    AvatarOption("ember", "🔥"),
-    AvatarOption("tide", "🌊"),
-    AvatarOption("grove", "🌿"),
-    AvatarOption("sun", "☀"),
-    AvatarOption("comet", "☄"),
-    AvatarOption("crown", "♛"),
-    AvatarOption("spark", "✦"),
-    AvatarOption("wild", "🃏")
+    AvatarOption("ember"),
+    AvatarOption("tide"),
+    AvatarOption("grove"),
+    AvatarOption("sun"),
+    AvatarOption("comet"),
+    AvatarOption("crown"),
+    AvatarOption("spark"),
+    AvatarOption("wild")
 )
 
 @Composable
@@ -295,13 +294,29 @@ private fun ProfileEditor(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 rowOptions.forEach { option ->
-                    AssistChip(
+                    FilterChip(
+                        selected = avatarId == option.id,
                         onClick = { onAvatarSelected(option.id) },
-                        label = { Text(option.symbol) },
+                        label = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                PlayerAvatar(
+                                    initials = "",
+                                    name = option.id,
+                                    size = 34.dp,
+                                    avatarId = option.id
+                                )
+                                Text(
+                                    option.id.replaceFirstChar { it.uppercase() },
+                                    modifier = Modifier.padding(start = 4.dp),
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                            }
+                        },
                         modifier = Modifier.semantics {
                             contentDescription = "${option.id} avatar"
                         },
-                        enabled = !state.isSaving
+                        enabled = !state.isSaving,
+                        shape = MaterialTheme.shapes.large
                     )
                 }
             }
@@ -363,10 +378,11 @@ private fun ProfileSummary(
             horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             PlayerAvatar(
-                initials = avatarOptions.first { it.id == profile.avatarId }.symbol,
+                initials = "",
                 name = profile.displayName,
                 size = 68.dp,
-                backgroundColor = ArenaPalette.Purple
+                backgroundColor = ArenaPalette.Purple,
+                avatarId = profile.avatarId
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(profile.displayName, style = MaterialTheme.typography.titleLarge)

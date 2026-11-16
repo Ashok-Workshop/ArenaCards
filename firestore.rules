@@ -53,6 +53,125 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    match /onlineMatches/{matchId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.playerUids;
+      allow create, update, delete: if false;
+
+      match /hands/{uid} {
+        allow read: if owns(uid)
+          && exists(/databases/$(database)/documents/onlineMatches/$(matchId))
+          && request.auth.uid in get(
+            /databases/$(database)/documents/onlineMatches/$(matchId)
+          ).data.playerUids;
+        allow create, update, delete: if false;
+      }
+
+      match /actions/{actionId} {
+        allow read, write: if false;
+      }
+
+      match /timeouts/{requestId} {
+        allow read, write: if false;
+      }
+
+      match /private/{documentId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /privateRooms/{roomId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow create, update, delete: if false;
+    }
+
+    match /onlinePlayers/{uid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /onlineMatchHistory/{uid}/matches/{matchId} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /friendships/{uid}/friends/{friendUid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /friendRequests/{uid}/{direction}/{otherUid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /userBlocks/{uid}/users/{otherUid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /playerPresence/{uid} {
+      allow read, write: if false;
+    }
+
+    match /roomInvitations/{uid}/{direction}/{invitationId} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if signedIn() && request.auth.uid in resource.data.memberUids;
+      allow create, update, delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn()
+          && exists(/databases/$(database)/documents/conversations/$(conversationId))
+          && request.auth.uid in get(
+            /databases/$(database)/documents/conversations/$(conversationId)
+          ).data.memberUids;
+        allow create, update, delete: if false;
+      }
+    }
+
+    match /privateRooms/{roomId}/messages/{messageId} {
+      allow read: if signedIn()
+        && exists(/databases/$(database)/documents/privateRooms/$(roomId))
+        && request.auth.uid in get(
+          /databases/$(database)/documents/privateRooms/$(roomId)
+        ).data.memberUids;
+      allow create, update, delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if signedIn() && request.auth.uid == resource.data.reporterUid;
+      allow create, update, delete: if false;
+    }
+
+    match /inAppNotifications/{uid}/items/{notificationId} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /notificationPreferences/{uid} {
+      allow read: if owns(uid);
+      allow create, update, delete: if false;
+    }
+
+    match /notificationTokens/{uid}/devices/{deviceId} {
+      allow read, write: if false;
+    }
+
+    match /moderationAudit/{auditId} {
+      allow read, write: if false;
+    }
+
+    match /messageRateLimits/{uid} {
+      allow read, write: if false;
+    }
+
+    match /reportRateLimits/{uid} {
+      allow read, write: if false;
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

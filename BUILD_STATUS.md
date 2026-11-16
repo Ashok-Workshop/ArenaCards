@@ -5,11 +5,11 @@
 **Status:** UI foundation remains implemented; offline game rules have been substantially extended. Additional polish and device validation remain.
 
 - Premium Material 3 design system, onboarding, dashboard, navigation, responsive practice table, and local game state remain in place.
-- The practice engine now uses a complete 108-card deck for two-to-four players, matching rules, Skip, Reverse, Draw Two, Wild, legal Wild Draw Four play, penalties, win/draw detection, discard reshuffling, and score values.
+- The practice engine now uses a complete 108-card deck for two-to-four players, matching rules, Skip, Reverse, Draw Two, Wild, Wild Draw Four challenges, penalties, win/draw detection, discard reshuffling, and score values.
 - Easy/medium/hard CPU choices use only the CPU's hand and public table/player-card counts.
 - Pause/resume, CPU difficulty selection, and SavedStateHandle match restoration are implemented.
-- Sound/animation polish, persisted local statistics, additional game settings, and physical-device QA remain outstanding; see [REMAINING_WORK.md](./REMAINING_WORK.md).
-- Online multiplayer, coin balances/transactions, and rewards are not implemented.
+- Local sound/haptic/reduced-motion/theme preferences, generated feedback tones, local practice history, original Compose graphics, and accessible card states are implemented and covered by targeted tests. Compose UI/accessibility QA and physical-device verification remain outstanding; see [REMAINING_WORK.md](./REMAINING_WORK.md).
+- Online multiplayer and server-authoritative wallet/rewards are implemented in source and emulator-tested, but are not deployed or production-verified.
 
 ## Phase 2B - Firebase Authentication
 
@@ -49,7 +49,7 @@ Debug APK: `app/build/outputs/apk/debug/app-debug.apk` (about 15.4 MB).
 
 Follow [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for SHA-1/SHA-256 registration, Firebase provider and SMS policy checks, test phone numbers, quotas/cost considerations, and step-by-step real-device verification instructions. Do not treat successful unit tests or APK assembly as proof that Console settings, Google OAuth, email delivery, or SMS delivery work.
 
-## Phase 2C - Player profiles and Firestore
+## Phase 2C - Player profiles and Firestore (baseline validation before challenge extension)
 
 **Status:** Android profile client, trusted Cloud Functions source, and restrictive Firestore rules implemented. Backend/rules are not deployed.
 
@@ -62,7 +62,7 @@ Follow [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for SHA-1/SHA-256 re
 - `firebase/functions/profile-domain.test.js` - passed, 5 tests.
 - `:feature:profile:testDebugUnitTest` - passed, 11 tests, 0 failures.
 - `:feature:auth:testDebugUnitTest` - passed, 16 tests, 0 failures.
-- `:feature:game:testDebugUnitTest` - passed, 28 tests, 0 failures after offline-engine review and fixes.
+- `:feature:game:testDebugUnitTest` - passed, 28 tests, 0 failures at this historical checkpoint.
 - `:app:assembleDebug` - passed.
 - `firebase/functions` domain helper tests - passed, 5 tests.
 - Firestore Emulator rules tests - passed, 5 tests.
@@ -71,4 +71,40 @@ Follow [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for SHA-1/SHA-256 re
 - `npm audit --omit=dev` in `firebase/functions` reported 0 known vulnerabilities. The local emulator/test toolchain reports 13 moderate findings in development-only dependencies; see [FIRESTORE_SECURITY.md](./FIRESTORE_SECURITY.md).
 - No Firebase services were deployed and no paid plan/services were enabled. First-time profile creation/edit will remain unavailable until the Cloud Functions/rules are deployed after owner approval.
 
+## Latest offline game validation
+
+After adding Wild Draw Four challenges, the complete Android command passed:
+
+```powershell
+.\gradlew.bat :feature:game:testDebugUnitTest :feature:auth:testDebugUnitTest :feature:profile:testDebugUnitTest :app:assembleDebug
+```
+
+- Game engine and ViewModel: 37 tests passed, 0 failures.
+- Authentication: 16 tests passed, 0 failures.
+- Player profiles: 11 tests passed, 0 failures.
+- `:app:assembleDebug`: passed; debug APK is about 18.7 MB.
+- Game tests passed again after the test-only random-injection correction, including seeded-session consistency; APK assembly also succeeded.
+- No real-device testing or production Firebase integration was performed.
+
 See [PLAYER_PROFILE_SETUP.md](./PLAYER_PROFILE_SETUP.md), [FIRESTORE_DATA_MODEL.md](./FIRESTORE_DATA_MODEL.md), and [FIRESTORE_SECURITY.md](./FIRESTORE_SECURITY.md) for schema, Console prerequisites, deployment boundary, and testing instructions.
+
+## Latest offline experience polish
+
+- Latest `:feature:game:testDebugUnitTest`: 40 passed; `:app:testDebugUnitTest`: 2 passed; `:app:assembleDebug`: passed.
+- Settings/history, DataStore persistence, generated tones/haptics, reduced-motion controls, original Compose-drawn graphics, and offline practice statistics are implemented.
+- These results do not cover Compose UI behavior, screen-reader experience, device performance, or final owner mobile QA.
+
+## Batch 4 social/backend implementation
+
+- Added source for Gamer ID friends/requests, block/unblock, presence, private-room invitations, direct/room chat, message/report moderation, notification preferences/FCM/in-app records, and scheduled timeout/invitation-expiry processing.
+- Android now includes Friends & Invitations, live paginated chat with reporting, notification center/preferences/permission/deep-link flow, presence heartbeat, and private-room invitation/rule controls.
+- Private rooms support 30/45/60-second turns, optional Wild Draw Four challenges, standard mode, and no stacking; changes lock when the room starts.
+- Validation: Cloud Functions unit tests (16), Functions Emulator scenarios (16), Firestore rules Emulator scenario (1), Android app assembly, and unit-test tasks for `app`, `data`, `feature:multiplayer`, `feature:friends`, `feature:chat`, and `feature:notifications` passed.
+- All backend source/rules remain undeployed. Live FCM, production/Enterprise behavior, scheduled-job activation, and physical-device UX remain unverified. Keep deployment and billing changes pending explicit owner approval.
+
+## Batch 5 competitive implementation
+
+- Added verified-result Elo ratings, global/friend/season leaderboards, privacy/block filtering, owner-admin season lifecycle, hourly scheduled season finalization, single-elimination tournaments, assigned multiplayer matches, competitive achievements, and server-owned rewards.
+- Android now includes the leaderboard/profile/season/tournament entry screen and callable repository.
+- Validation: 22 Functions unit tests, 17 Functions Emulator scenarios, 1 Firestore rules Emulator scenario, 87 Android unit tests, and `:app:assembleDebug` passed.
+- No production season/tournament was created, and no Functions/rules/indexes were deployed. Enterprise behavior, production IAM, live delivery, and physical-device QA remain unverified.

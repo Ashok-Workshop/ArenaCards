@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.isSystemInDarkTheme
 
@@ -22,6 +23,21 @@ object ArenaPalette {
     val Green = Color(0xFF52D6A0)
     val Yellow = Color(0xFFFFD166)
     val TextMuted = Color(0xFF9AA6C0)
+}
+
+object ArenaShapeTokens {
+    val Panel = 24.dp
+    val Button = 18.dp
+    val Card = 17.dp
+    val Compact = 12.dp
+}
+
+object ArenaSpacing {
+    val XSmall = 4.dp
+    val Small = 8.dp
+    val Medium = 12.dp
+    val Large = 18.dp
+    val XLarge = 24.dp
 }
 
 private val ArenaCardsDarkColors = darkColorScheme(

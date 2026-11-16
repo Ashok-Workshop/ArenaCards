@@ -14,6 +14,8 @@ class GameEngineTest {
         val deck = GameEngine.createDeck(Random(1))
 
         assertEquals(108, deck.size)
+        assertEquals(108, deck.map { it.id }.toSet().size)
+        assertTrue(deck.all { it.id.isNotBlank() })
         CardColor.entries.filter { it != CardColor.WILD }.forEach { color ->
             assertEquals(1, deck.count { it.color == color && it.value == 0 })
             (1..9).forEach { value ->
@@ -70,20 +72,14 @@ class GameEngineTest {
     }
 
     @Test
-    fun wildDrawFour_isInvalidWhilePlayerHasActiveColor() {
+    fun wildDrawFourCanBeChallengedWhenPlayerHasActiveColor() {
         val hand = listOf(
             GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true),
             GameCard(CardColor.RED, 2)
         )
 
-        assertFalse(
-            GameEngine.isPlayable(
-                topCard = GameCard(CardColor.RED, 5),
-                candidate = hand[0],
-                activeColor = CardColor.RED,
-                hand = hand
-            )
-        )
+        assertTrue(GameEngine.isPlayable(GameCard(CardColor.RED, 5), hand[0], CardColor.RED))
+        assertFalse(GameEngine.isWildDrawFourLegal(CardColor.RED, hand))
     }
 
     @Test
@@ -95,10 +91,10 @@ class GameEngineTest {
             GameEngine.isPlayable(
                 topCard = GameCard(CardColor.RED, 5),
                 candidate = wild,
-                activeColor = CardColor.RED,
-                hand = hand
+                activeColor = CardColor.RED
             )
         )
+        assertTrue(GameEngine.isWildDrawFourLegal(CardColor.RED, hand))
     }
 
     @Test
@@ -121,6 +117,31 @@ class GameEngineTest {
         assertNull(GameEngine.playCard(session, 1, 0))
         assertNull(GameEngine.playCard(session, 0, 1))
         assertNull(GameEngine.playCard(session, 0, 0))
+    }
+
+    @Test
+    fun unoCallCanBeAnnouncedOrCaughtForTwoCardsWithinTenSeconds() {
+        val session = session(
+            hands = listOf(listOf(red(2), red(3)), listOf(blue(2)))
+        )
+        val played = GameEngine.playCard(
+            session = session,
+            playerIndex = 0,
+            cardIndex = 0,
+            nowMillis = 1_000L
+        )!!
+
+        assertEquals(11_000L, played.pendingUnoCall?.deadlineMillis)
+        assertNull(GameEngine.drawForCurrentPlayer(played, 1))
+
+        val announced = GameEngine.announceUno(played, 0, nowMillis = 11_000L)!!
+        assertNull(announced.pendingUnoCall)
+        assertNull(GameEngine.catchMissedUno(announced, 1, nowMillis = 11_000L))
+
+        val caught = GameEngine.catchMissedUno(played, 1, nowMillis = 11_000L)!!
+        assertEquals(3, caught.hands[0].size)
+        assertNull(caught.pendingUnoCall)
+        assertNull(GameEngine.catchMissedUno(played, 1, nowMillis = 11_001L))
     }
 
     @Test
@@ -203,11 +224,102 @@ class GameEngineTest {
             drawPile = listOf(green(4), yellow(5), blue(6), green(7))
         )
 
-        val played = GameEngine.playCard(session, 0, 0, CardColor.BLUE, Random(1))
+        val pending = GameEngine.playCard(session, 0, 0, CardColor.BLUE, Random(1))!!
+        assertEquals(1, pending.hands[1].size)
+        assertEquals(1, pending.currentPlayerIndex)
+        assertEquals(CardColor.BLUE, pending.activeColor)
+        val resolved = GameEngine.resolveWildDrawFourChallenge(
+            pending, 1, challenge = false, random = Random(2)
+        )
+        assertEquals(5, resolved?.hands?.get(1)?.size)
+        assertEquals(2, resolved?.currentPlayerIndex)
+    }
 
-        assertEquals(5, played?.hands?.get(1)?.size)
-        assertEquals(2, played?.currentPlayerIndex)
-        assertEquals(CardColor.BLUE, played?.activeColor)
+    @Test
+    fun wildDrawFourChallengeSucceedsWhenOffenderHadActiveColor() {
+        val wildDrawFour = GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true)
+        val session = session(
+            hands = listOf(listOf(wildDrawFour, red(1)), listOf(blue(2), blue(4)), listOf(green(3))),
+            drawPile = (4..12).map(::blue)
+        )
+        val played = GameEngine.playCard(session, 0, 0, CardColor.BLUE, Random(3))!!
+
+        assertEquals(1, played.currentPlayerIndex)
+        assertEquals(2, played.hands[1].size)
+        val resolved = GameEngine.resolveWildDrawFourChallenge(
+            played, 1, challenge = true, random = Random(4)
+        )!!
+
+        assertEquals(5, resolved.hands[0].size)
+        assertEquals(1, resolved.currentPlayerIndex)
+        assertNull(resolved.winnerIndex)
+        assertNull(resolved.pendingWildDrawFourChallenge)
+    }
+
+    @Test
+    fun wildDrawFourChallengeFailsWhenOffenderHadNoActiveColor() {
+        val wildDrawFour = GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true)
+        val session = session(
+            hands = listOf(listOf(wildDrawFour, blue(1)), listOf(green(2)), listOf(yellow(3))),
+            drawPile = (4..15).map(::blue)
+        )
+        val played = GameEngine.playCard(session, 0, 0, CardColor.BLUE, Random(5))!!
+        val resolved = GameEngine.resolveWildDrawFourChallenge(
+            played, 1, challenge = true, random = Random(6)
+        )!!
+
+        assertEquals(7, resolved.hands[1].size)
+        assertEquals(2, resolved.currentPlayerIndex)
+        assertNull(resolved.winnerIndex)
+    }
+
+    @Test
+    fun acceptingWildDrawFourDrawsFourAndSkipsChallenger() {
+        val wildDrawFour = GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true)
+        val session = session(
+            hands = listOf(listOf(wildDrawFour, blue(1)), listOf(green(2)), listOf(yellow(3))),
+            drawPile = (4..12).map(::blue)
+        )
+        val played = GameEngine.playCard(session, 0, 0, CardColor.BLUE, Random(7))!!
+        val resolved = GameEngine.resolveWildDrawFourChallenge(
+            played, 1, challenge = false, random = Random(8)
+        )!!
+
+        assertEquals(5, resolved.hands[1].size)
+        assertEquals(2, resolved.currentPlayerIndex)
+        assertNull(resolved.pendingWildDrawFourChallenge)
+    }
+
+    @Test
+    fun wildDrawFourAsLastCardWaitsForChallengeBeforeWinner() {
+        val wildDrawFour = GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true)
+        val session = session(
+            hands = listOf(listOf(wildDrawFour), listOf(green(2))),
+            drawPile = (4..12).map(::blue)
+        )
+
+        val pending = GameEngine.playCard(session, 0, 0, CardColor.BLUE, Random(9))!!
+        assertNull(pending.winnerIndex)
+        val result = GameEngine.resolveWildDrawFourChallenge(
+            pending, 1, challenge = false, random = Random(10)
+        )!!
+        assertEquals(0, result.winnerIndex)
+        assertEquals(5, result.hands[1].size)
+    }
+
+    @Test
+    fun drawTwoAsLastCardAppliesPenaltyBeforeDeclaringWinner() {
+        val drawTwo = GameCard(CardColor.RED, GameCard.DRAW_TWO)
+        val session = session(
+            hands = listOf(listOf(drawTwo), listOf(blue(1))),
+            drawPile = listOf(green(2), yellow(3))
+        )
+
+        val played = GameEngine.playCard(session, 0, 0, random = Random(11))
+
+        assertEquals(0, played?.winnerIndex)
+        assertEquals(3, played?.hands?.get(1)?.size)
+        assertTrue(played?.drawPile?.isEmpty() == true)
     }
 
     @Test
@@ -334,6 +446,77 @@ class GameEngineTest {
 
         assertEquals(original, GameEngine.decodeSession(GameEngine.encodeSession(original)))
         assertNull(GameEngine.decodeSession("not a game state"))
+    }
+
+    @Test
+    fun sessionSerializationReadsLegacySessionsWithoutCardIdsOrChallengeField() {
+        val original = GameEngine.newGame(2, Random(28))
+        val legacySession = original.copy(
+            hands = original.hands.map { hand -> hand.map { it.copy(id = "") } },
+            drawPile = original.drawPile.map { it.copy(id = "") },
+            discardPile = original.discardPile.map { it.copy(id = "") }
+        )
+        val legacyEncoding = GameEngine.encodeSession(legacySession)
+            .substringBeforeLast("|")
+
+        assertEquals(legacySession, GameEngine.decodeSession(legacyEncoding))
+    }
+
+    @Test
+    fun sessionSerializationPreservesPendingChallenge() {
+        val challengeSession = session(
+            hands = listOf(
+                listOf(blue(1)),
+                listOf(blue(2))
+            ),
+            currentPlayerIndex = 0
+        ).copy(
+            discardPile = listOf(
+                red(5),
+                GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true)
+            ),
+            activeColor = CardColor.BLUE,
+            pendingWildDrawFourChallenge = WildDrawFourChallenge(
+                offenderIndex = 1,
+                targetIndex = 0,
+                offenderHadActiveColor = true
+            )
+        )
+
+        assertEquals(
+            challengeSession,
+            GameEngine.decodeSession(GameEngine.encodeSession(challengeSession))
+        )
+    }
+
+    @Test
+    fun sessionSerializationPreservesUnoWindowAndReadsEarlierVersions() {
+        val withUnoWindow = session(
+            hands = listOf(listOf(red(2)), listOf(blue(2)))
+        ).copy(pendingUnoCall = UnoCallWindow(offenderIndex = 0, deadlineMillis = 12_345L))
+        assertEquals(
+            withUnoWindow,
+            GameEngine.decodeSession(GameEngine.encodeSession(withUnoWindow))
+        )
+
+        val withoutUnoWindow = withUnoWindow.copy(pendingUnoCall = null)
+        val withChallengeField = GameEngine.encodeSession(withoutUnoWindow)
+            .substringBeforeLast("|")
+        val oldestFormat = withChallengeField.substringBeforeLast("|")
+        assertEquals(withoutUnoWindow, GameEngine.decodeSession(withChallengeField))
+        assertEquals(withoutUnoWindow, GameEngine.decodeSession(oldestFormat))
+    }
+
+    @Test
+    fun cpuChallengeDecisionIsDeterministicAndDifficultyDependent() {
+        CpuDifficulty.entries.forEach { difficulty ->
+            assertEquals(
+                GameEngine.shouldCpuChallenge(difficulty, Random(12)),
+                GameEngine.shouldCpuChallenge(difficulty, Random(12))
+            )
+        }
+        assertTrue(GameEngine.shouldCpuChallenge(CpuDifficulty.HARD, Random(0)))
+        assertFalse(GameEngine.shouldCpuChallenge(CpuDifficulty.EASY, Random(0)))
     }
 
     private fun session(

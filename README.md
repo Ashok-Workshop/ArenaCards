@@ -16,6 +16,8 @@ ArenaCards is a premium Android card game starter project built with Kotlin, Jet
 - Three-page onboarding with locally persisted completion
 - Home dashboard, account UI, game-mode selection, and practice table
 - Offline card game with special-card rules, color selection, CPU opponents, and resumable practice
+- Original Compose-drawn card/brand graphics, optional generated feedback tones, and accessible card-state descriptions
+- Device-local sound, haptic, reduced-motion, and theme settings plus noncompetitive practice history
 - Navigation and theme system
 - System-aware Material 3 light and dark themes
 
@@ -25,7 +27,7 @@ The authentication foundation uses Firebase Authentication for email/password re
 
 Firebase Console provider status and SMS delivery have not been independently verified. Google sign-in requires valid signing fingerprints and a generated `default_web_client_id`. Follow [AUTHENTICATION_SETUP.md](./AUTHENTICATION_SETUP.md) for Firebase Console setup and real-device test steps.
 
-Online multiplayer, coin balances/transactions, and reward claims are not implemented. Offline game functionality remains local.
+The app also includes source implementations for server-authoritative multiplayer, wallet/rewards, friends and blocks, private-room invitations, direct/room chat, reports, notification preferences/FCM, configurable private-room rules, competitive Elo leaderboards, seasons, and single-elimination tournaments. These depend on owner-approved deployment of Cloud Functions, Firestore rules, and indexes and have not been production-tested or deployed. Ads/AdMob SSV, coin spending, and full administrative tooling remain unfinished.
 
 ## Phase 2C player profiles
 
@@ -35,7 +37,7 @@ Gamer ID and username allocation are implemented in trusted Cloud Functions sour
 
 The Firestore Emulator rules test suite and Cloud Functions domain helper tests are available under `firebase/`. Emulator tests do not establish production security or verify deployed Functions.
 
-The offline practice engine uses a 108-card deck and supports two to four seats, matching, Skip, Reverse, Draw Two, Wild, legal Wild Draw Four play, penalties, CPU difficulty selection, pause/resume, and saved match state. Offline results do not grant competitive rewards. Animation/audio polish, durable statistics, full device QA, and all online economy/social/multiplayer features remain outstanding; see [REMAINING_WORK.md](./REMAINING_WORK.md).
+The offline practice engine uses a 108-card deck and supports two to four seats, matching, Skip, Reverse, Draw Two, Wild, Wild Draw Four challenge resolution, penalties, CPU difficulty selection, pause/resume, and saved match state. Draw stacking is disabled. See [GAME_RULES.md](./GAME_RULES.md) for the original ArenaCards ruleset. Offline results do not grant competitive rewards. Device-local settings and practice history, original Compose graphics, and generated feedback are implemented; Compose UI/accessibility verification and final device QA remain outstanding. The online foundation includes human-only matchmaking, private room codes, server-validated turns, reconnect/scheduled timeout handling, configurable room rules, verified history, and callable-backed rewards. Social, chat, reports, and notifications are implemented in source only. See [REMAINING_WORK.md](./REMAINING_WORK.md) and [DEPLOYMENT_STATUS.md](./DEPLOYMENT_STATUS.md).
 
 ## Install a debug build on a phone
 
@@ -57,4 +59,4 @@ Alternatively, open the project in Android Studio, select a connected device, an
 
 ## Notes
 
-Firebase Authentication code is connected, but provider configuration and real-device authentication are not independently verified. Profile functions and rules are source-only until owner-approved deployment. The local emulator test toolchain currently reports moderate-severity npm audit findings in development-only dependencies; the Cloud Functions runtime dependencies have no known npm audit findings. Online multiplayer and coin services are not implemented.
+Firebase Authentication code is connected, but provider configuration and real-device authentication are not independently verified. Profile, wallet, multiplayer, and social functions/rules are source-only until owner-approved deployment. Scheduled timeout/invitation jobs are inactive until deployed. Emulator tests do not establish production readiness. The local emulator test toolchain currently reports moderate-severity npm audit findings in development-only dependencies; the Cloud Functions runtime dependencies have no known npm audit findings.
