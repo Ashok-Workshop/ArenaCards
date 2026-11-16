@@ -2,6 +2,7 @@ package com.arenacards.feature.game
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.tween
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaCardColor
 import com.arenacards.designsystem.ArenaCardBack
 import com.arenacards.designsystem.ArenaCardReveal
@@ -154,7 +156,7 @@ fun ArenaCardsGameScreen(
             )
 
             ArenaPanel(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
                 backgroundBrush = Brush.linearGradient(
                     listOf(Color(0xFF202B47), Color(0xFF263B4B))
                 ),
@@ -637,12 +639,17 @@ private fun PracticeHeader(
     onExit: () -> Unit
 ) {
     val title: @Composable ColumnScope.() -> Unit = {
-        Text(
-            text = "PRACTICE TABLE",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.labelLarge
-        )
-        Text("Match the moment", style = MaterialTheme.typography.headlineMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ArenaCardsLogoMark(Modifier.size(42.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    text = "ARENA • PRACTICE TABLE",
+                    color = MaterialTheme.colorScheme.secondary,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text("Match the moment", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
     }
     val controls: @Composable RowScope.() -> Unit = {
         ArenaSecondaryButton(
@@ -679,7 +686,7 @@ private fun OpponentSeat(
     opponent: OpponentUiState,
     modifier: Modifier = Modifier
 ) {
-    ArenaPanel(modifier = modifier) {
+    ArenaPanel(modifier = modifier.animateContentSize()) {
         PlayerAvatar(
             initials = opponent.name.substringAfterLast(" ").take(1),
             name = opponent.name,
