@@ -774,7 +774,7 @@ fun ArenaPremiumCard(
                 shape = shape
             )
             .semantics {
-                contentDescription = "${label} ${color.name.lowercase()} ArenaCards card"
+                contentDescription = "${cardSpokenLabel(value)} ${color.name.lowercase()} ArenaCards card"
                 this.selected = selected
             }
     ) {
