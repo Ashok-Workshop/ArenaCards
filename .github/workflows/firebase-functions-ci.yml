@@ -1,0 +1,52 @@
+name: Firebase Functions CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "firebase/functions/**"
+      - "firebase/firestore.rules"
+      - "firebase/tests/**"
+      - ".github/workflows/firebase-functions-ci.yml"
+  push:
+    branches:
+      - main
+      - "rebuild/**"
+    paths:
+      - "firebase/functions/**"
+      - "firebase/firestore.rules"
+      - "firebase/tests/**"
+      - ".github/workflows/firebase-functions-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: firebase-functions-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Cloud Functions unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: firebase/functions
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: firebase/functions/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Run Functions unit tests
+        run: npm test
