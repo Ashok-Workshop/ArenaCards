@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPalette
 import com.arenacards.designsystem.ArenaPrimaryButton
@@ -58,18 +60,26 @@ fun LeaderboardScreen(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TextButton(onClick = onBack) { Text("‹  Back") }
-        Text(
-            "ARENA  /  COMPETITIVE",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.labelLarge
-        )
-        Text(
-            "Rank among players",
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ArenaCardsLogoMark(Modifier.size(42.dp))
+                Column {
+                    Text("ARENA / COMPETITIVE", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Rank among players", color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+            ArenaSecondaryButton(text = "‹ Back", onClick = onBack)
+        }
         state.profile?.let { profile ->
             CompetitiveProfileCard(profile, reducedMotion)
         }
@@ -320,11 +330,11 @@ private fun LeaderboardPodium(
                 backgroundBrush = Brush.verticalGradient(listOf(rankColor.copy(alpha = 0.24f), Color(0xFF17243A)))
             ) {
                 Text(
-                    when (player.rank) { 1 -> "CHAMPION"; 2 -> "RUNNER-UP"; else -> "TOP 3" },
+                    when (player.rank) { 1 -> "CHAMPION"; 2 -> "RUNNER-UP"; 3 -> "TOP 3"; else -> "RANK #${player.rank}" },
                     color = rankColor, style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Black, maxLines = 1
                 )
-                PlayerAvatar(initials = player.avatarId.take(1), name = player.displayName, size = 38.dp,
+                PlayerAvatar(initials = player.displayName.take(1), name = player.displayName, size = 38.dp,
                     backgroundColor = rankColor, avatarId = player.avatarId)
                 Text(player.displayName, color = Color.White, style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold, maxLines = 1)
