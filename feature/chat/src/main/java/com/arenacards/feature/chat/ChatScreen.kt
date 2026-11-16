@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPrimaryButton
 import com.arenacards.designsystem.ArenaSecondaryButton
@@ -56,16 +58,24 @@ fun ChatScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(Modifier.weight(1f)) {
-                Text("ARENA CHAT", color = MaterialTheme.colorScheme.secondary)
-                Text(
-                    selectedFriend?.displayName ?: if (state.selectedRoomId != null) {
-                        "Private room chat"
-                    } else {
-                        "Messages"
-                    },
-                    style = MaterialTheme.typography.headlineSmall
-                )
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ArenaCardsLogoMark(Modifier.size(40.dp))
+                Column {
+                    Text("ARENA CHAT", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        selectedFriend?.displayName ?: if (state.selectedRoomId != null) {
+                            "Private room chat"
+                        } else {
+                            "Messages"
+                        },
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
             }
             if (!inConversation) {
                 ArenaSecondaryButton(text = "Back", onClick = onBack)
@@ -99,7 +109,7 @@ fun ChatScreen(
             ) {
                 items(state.conversations, key = { it.conversationId }) { conversation ->
                     ArenaPanel(
-                        Modifier.fillMaxWidth()
+                        Modifier.fillMaxWidth().animateContentSize()
                     ) {
                         Text(
                             conversation.friend.displayName,
