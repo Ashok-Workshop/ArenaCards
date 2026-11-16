@@ -64,7 +64,7 @@ This tracker reflects the repository after extending offline practice. “Implem
 - Hard CPU card selection now gives stronger preference to shedding high-point action cards while conserving Wild and Wild Draw Four cards when a useful colored action is available. A focused unit test covers this decision.
 - The home hero's continuously animated card fan now has a static reduced-motion rendering, and the existing settings preference is passed from the app navigation host.
 - Leaderboard/tournament, chat, profile, wallet, and social screen presentation received incremental branded-header, podium/bracket, contrast, and state-transition refinements. The card-back accessibility test was extended.
-- These are source changes on `rebuild/phase-1-audit`; no fresh Gradle build or test run was available in this pass. Do not mark the new CPU test or UI test as executed until a supported Android build environment runs them.
+- These are source changes on `rebuild/phase-1-audit`. The latest GitHub Actions run on `ae11798` passed Android unit tests and debug APK assembly; Firebase Functions unit tests, Firestore rules emulator tests, and Functions emulator tests also passed. This verifies CI build/test execution for that commit, not visual, accessibility, physical-device, or production QA.
 - The branch is intentionally not merged. It has diverged from `main`; reconcile the three base-only commits before preparing a merge.
 
 
