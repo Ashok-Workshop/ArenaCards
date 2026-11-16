@@ -50,3 +50,35 @@ jobs:
 
       - name: Run Functions unit tests
         run: npm test
+
+  emulator-tests:
+    name: Firestore rules and Functions emulator tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: firebase
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            firebase/package-lock.json
+            firebase/functions/package-lock.json
+
+      - name: Install Firebase test dependencies
+        run: npm ci
+
+      - name: Install Cloud Functions dependencies
+        run: npm --prefix functions ci
+
+      - name: Run Firestore rules emulator tests
+        run: npm run test:rules
+
+      - name: Run Cloud Functions emulator tests
+        run: npm run test:functions:emulator
