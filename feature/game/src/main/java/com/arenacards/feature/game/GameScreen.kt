@@ -540,6 +540,32 @@ fun ArenaCardsGameScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("The CPU is paused. Your current match stays on this screen until you leave.")
+                    Text(
+                        "CPU DIFFICULTY",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        when (state.difficulty) {
+                            CpuDifficulty.EASY -> "Relaxed play · random legal moves"
+                            CpuDifficulty.MEDIUM -> "Balanced play · prioritises useful cards"
+                            CpuDifficulty.HARD -> "Strategic play · stronger card choices"
+                        },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    listOf(
+                        CpuDifficulty.EASY to "Easy",
+                        CpuDifficulty.MEDIUM to "Medium",
+                        CpuDifficulty.HARD to "Hard"
+                    ).forEach { (difficulty, label) ->
+                        ArenaSecondaryButton(
+                            text = (if (state.difficulty == difficulty) "✓  " else "") + label,
+                            onClick = { viewModel.setDifficulty(difficulty) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     ArenaSecondaryButton(
                         text = "Restart this match",
                         onClick = { showRestartConfirmation = true },
