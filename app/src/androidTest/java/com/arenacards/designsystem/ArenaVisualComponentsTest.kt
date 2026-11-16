@@ -130,6 +130,18 @@ class ArenaVisualComponentsTest {
     }
 
     @Test
+    fun premiumCardBackExposesBrandIdentity() {
+        composeRule.setContent {
+            ArenaCardsTheme {
+                ArenaCardBack()
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("ArenaCards premium card back")
+            .assertExists()
+    }
+
+    @Test
     fun avatarKeepsPlayerIdentityAccessible() {
         composeRule.setContent {
             ArenaCardsTheme {
