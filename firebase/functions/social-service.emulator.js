@@ -355,6 +355,17 @@ test("private and room chat enforce membership, blocks, limits, reporting and no
       reviewNote: "Queued for moderator review",
     }, { moderator: true }));
 
+    const adminReview = await service.reviewReport(request(uids[0], {
+      reportId: `${uids[1]}_report-request-001`,
+      status: "RESOLVED",
+      reviewNote: "Reviewed by administrator",
+    }, { admin: true }));
+    assert.equal(adminReview.reviewed, true);
+    const reviewedReport = await db.collection("reports")
+      .doc(`${uids[1]}_report-request-001`).get();
+    assert.equal(reviewedReport.get("status"), "RESOLVED");
+    assert.equal(reviewedReport.get("reviewerUid"), uids[0]);
+
     await roomRef.set({
       roomId: roomRef.id,
       ownerUid: uids[0],
