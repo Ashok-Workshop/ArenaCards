@@ -95,7 +95,7 @@ fun WalletScreen(
         }
 
         state.errorMessage?.let { message ->
-            ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+            ArenaPanel(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 Text(
                     message,
                     color = MaterialTheme.colorScheme.error,
@@ -142,7 +142,7 @@ fun WalletScreen(
                 Text(
                     "Earned ${snapshot.wallet.totalCoinsEarned}  •  Spent ${snapshot.wallet.totalCoinsSpent}",
                     modifier = Modifier.padding(top = 4.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFD7E5F7),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
