@@ -52,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaCardColor
 import com.arenacards.designsystem.ArenaCardBack
 import com.arenacards.designsystem.ArenaCardReveal
@@ -131,13 +132,16 @@ fun MultiplayerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        "ARENA • LIVE",
-                        color = MaterialTheme.colorScheme.secondary,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Text("Online table", style = MaterialTheme.typography.headlineMedium)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ArenaCardsLogoMark(Modifier.size(42.dp))
+                    Column {
+                        Text(
+                            "ARENA • LIVE",
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        Text("Online table", style = MaterialTheme.typography.headlineMedium)
+                    }
                 }
                 ArenaSecondaryButton(text = "‹ Back", onClick = { showExitConfirmation = true })
             }
