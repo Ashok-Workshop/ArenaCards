@@ -1,5 +1,6 @@
 package com.arenacards.feature.notifications
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -71,7 +72,7 @@ fun NotificationsScreen(
             onClick = onRequestPermission,
             modifier = Modifier.fillMaxWidth()
         )
-        ArenaPanel(Modifier.fillMaxWidth()) {
+        ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
             Text("Notification preferences", style = MaterialTheme.typography.titleLarge)
             PreferenceToggle(
                 title = "Friend requests",
@@ -108,12 +109,12 @@ fun NotificationsScreen(
         state.noticeMessage?.let { Text(it, color = MaterialTheme.colorScheme.secondary) }
         Text("Recent activity", style = MaterialTheme.typography.titleLarge)
         if (state.notifications.isEmpty()) {
-            ArenaPanel(Modifier.fillMaxWidth()) {
+            ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                 Text("No notifications yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         state.notifications.forEach { notification ->
-            ArenaPanel(Modifier.fillMaxWidth()) {
+            ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                 Text(
                     notification.type.toDisplayName(),
                     style = MaterialTheme.typography.titleMedium,
