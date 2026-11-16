@@ -21,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,7 +68,7 @@ fun PlayerProfileScreen(
     onBack: () -> Unit,
     onContinueHome: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val profile = state.profile?.takeIf { state.uid == uid && it.uid == uid }
     var editing by remember(profile?.uid) { mutableStateOf(profile == null) }
     var username by remember(profile?.uid) { mutableStateOf(profile?.username.orEmpty()) }
@@ -201,7 +200,7 @@ fun PlayerProfileGateScreen(
     onProfileFound: () -> Unit,
     onProfileRequired: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(uid) {
         viewModel.loadProfile(uid)
     }
