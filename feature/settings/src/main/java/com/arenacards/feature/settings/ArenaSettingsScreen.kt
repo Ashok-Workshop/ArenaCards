@@ -1,11 +1,13 @@
 package com.arenacards.feature.settings
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPrimaryButton
 import com.arenacards.designsystem.ArenaSecondaryButton
@@ -64,15 +67,32 @@ fun ArenaSettingsScreen(
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        ArenaSecondaryButton(text = "‹  Back", onClick = onBack)
-        Text("Settings", style = MaterialTheme.typography.headlineLarge)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                ArenaCardsLogoMark(Modifier.size(40.dp))
+                Column {
+                    Text("ARENA / SETTINGS", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Settings", style = MaterialTheme.typography.headlineLarge)
+                }
+            }
+            ArenaSecondaryButton(text = "‹ Back", onClick = onBack)
+        }
         Text(
             "Personalize your practice experience. Changes are saved on this device.",
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium
         )
 
-        ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+        ArenaPanel(modifier = Modifier.fillMaxWidth().animateContentSize()) {
             SettingToggle(
                 title = "Sound effects",
                 description = "Play subtle feedback tones during card-game actions.",
