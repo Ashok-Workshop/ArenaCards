@@ -80,6 +80,9 @@ async function cleanup(uids, extra = {}) {
     ...uids.flatMap((uid) => [
       db.collection("reports").doc(`${uid}_report-request-001`).delete().catch(() => {}),
       db.collection("reports").doc(`${uid}_report-request-002`).delete().catch(() => {}),
+      db.collection("reports").doc(`${uid}_report-request-003`).delete().catch(() => {}),
+      db.collection("reports").doc(`${uid}_report-request-004`).delete().catch(() => {}),
+      db.collection("reports").doc(`${uid}_report-request-005`).delete().catch(() => {}),
     ]),
   ]);
 }
@@ -365,6 +368,22 @@ test("private and room chat enforce membership, blocks, limits, reporting and no
       .doc(`${uids[1]}_report-request-001`).get();
     assert.equal(reviewedReport.get("status"), "RESOLVED");
     assert.equal(reviewedReport.get("reviewerUid"), uids[0]);
+
+    for (let index = 2; index <= 5; index += 1) {
+      await service.reportPlayer(request(uids[1], {
+        reportedUid: uids[0],
+        reason: "SPAM",
+        requestId: "report-request-00" + index,
+      }));
+    }
+    await assert.rejects(
+      service.reportPlayer(request(uids[1], {
+        reportedUid: uids[0],
+        reason: "SPAM",
+        requestId: "report-request-006",
+      })),
+      (error) => error.code === "resource-exhausted"
+    );
 
     await roomRef.set({
       roomId: roomRef.id,
