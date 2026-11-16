@@ -81,12 +81,12 @@ fun ArenaPrimaryButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.defaultMinSize(minHeight = 52.dp),
+        modifier = modifier.defaultMinSize(minHeight = 56.dp),
         enabled = enabled,
         shape = RoundedCornerShape(ArenaShapeTokens.Button),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 5.dp,
+            defaultElevation = 5.dp,
+            pressedElevation = 1.dp,
             disabledElevation = 0.dp
         ),
         colors = ButtonDefaults.buttonColors(
@@ -107,7 +107,7 @@ fun ArenaSecondaryButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.defaultMinSize(minHeight = 50.dp),
+        modifier = modifier.defaultMinSize(minHeight = 54.dp),
         enabled = enabled,
         shape = RoundedCornerShape(ArenaShapeTokens.Button)
     ) {
@@ -123,11 +123,19 @@ fun ArenaPanel(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier.border(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
-            shape = RoundedCornerShape(ArenaShapeTokens.Panel)
-        ),
+        modifier = modifier
+            .shadow(10.dp, RoundedCornerShape(ArenaShapeTokens.Panel))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.22f),
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+                        ArenaPalette.Gold.copy(alpha = 0.10f)
+                    )
+                ),
+                shape = RoundedCornerShape(ArenaShapeTokens.Panel)
+            ),
         shape = RoundedCornerShape(ArenaShapeTokens.Panel),
         colors = CardDefaults.cardColors(
             containerColor = if (backgroundBrush == null) {
@@ -136,7 +144,7 @@ fun ArenaPanel(
                 Color.Transparent
             }
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 7.dp, pressedElevation = 3.dp)
     ) {
         if (backgroundBrush == null) {
             CompositionLocalProvider(LocalContentColor provides contentColor) {
