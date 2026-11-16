@@ -26,7 +26,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +43,7 @@ import androidx.core.view.WindowCompat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -121,7 +121,7 @@ class MainActivity : ComponentActivity() {
         shouldOpenNotifications = intent.getBooleanExtra(EXTRA_OPEN_NOTIFICATIONS, false)
         val localStore = ArenaLocalStore(applicationContext)
         setContent {
-            val settings by localStore.settings.collectAsState(initial = ArenaSettings())
+            val settings by localStore.settings.collectAsStateWithLifecycle(initialValue = ArenaSettings())
             val feedback = remember { ArenaFeedbackController(settings) }
             SideEffect { feedback.updateSettings(settings) }
             DisposableEffect(feedback) {
@@ -217,7 +217,7 @@ private fun ArenaCardsApp(
             AuthViewModelFactory(FirebaseAuthRepository(applicationContext))
         }
     )
-    val authState by authViewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val walletRepository = remember { FirebaseWalletRepository() }
     val multiplayerRepository = remember { FirebaseMultiplayerRepository() }
     val socialRepository = remember { FirebaseSocialRepository() }
@@ -227,7 +227,7 @@ private fun ArenaCardsApp(
             WalletViewModelFactory(walletRepository)
         }
     )
-    val walletState by walletViewModel.uiState.collectAsState()
+    val walletState by walletViewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(authState.user?.uid) {
         if (authState.isAuthenticated && authState.user?.uid != null) {
             walletViewModel.refresh()
@@ -240,7 +240,7 @@ private fun ArenaCardsApp(
             PlayerProfileViewModelFactory(FirebasePlayerProfileRepository())
         }
     )
-    val profileState by profileViewModel.uiState.collectAsState()
+    val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
     val activeProfile = profileState.profile?.takeIf {
         authState.isAuthenticated && it.uid == authState.user?.uid
     }
