@@ -73,6 +73,12 @@ This tracker reflects the repository after extending offline practice. “Implem
 - The branch is intentionally not merged. It has diverged from `main`; reconcile the three base-only commits before preparing a merge.
 
 
+### Latest graphics pass (2026-11-16)
+
+- Improved the discard-pile card reveal with a small pitch/depth/scale response during the existing Compose flip. Reduced-motion mode remains static; no external 3D engine or paid art asset was added.
+- The hand already supports restrained drag tilt/lift and selected-card feedback. This remains a 2.5D Compose presentation, not a full 3D renderer or finished cinematic animation package.
+- Visual review, screenshot baselines, contrast/font-scale/TalkBack checks, low-end-device profiling, and owner physical-device QA remain open for final QA.
+
 ### Latest automation pass (2026-11-16)
 
 - Added `.github/workflows/android-ci.yml` on `rebuild/phase-1-audit`. Pull requests targeting `main`, pushes to `main` and `rebuild/**`, and manual dispatch now run JDK 17 setup, Gradle unit tests, and a debug APK assembly.
