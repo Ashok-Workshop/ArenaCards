@@ -1,5 +1,6 @@
 package com.arenacards.feature.chat
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -157,15 +158,38 @@ fun ChatScreen(
                 items(state.messages, key = { it.messageId }) { message ->
                     val ownMessage = message.senderUid == viewModel.currentUid
                     ArenaPanel(
-                        Modifier.fillMaxWidth(if (ownMessage) 0.88f else 0.96f)
+                        modifier = Modifier
+                            .fillMaxWidth(if (ownMessage) 0.88f else 0.96f)
                             .align(if (ownMessage) Alignment.End else Alignment.Start)
+                            .animateContentSize(),
+                        backgroundBrush = if (ownMessage) {
+                            Brush.linearGradient(listOf(Color(0xFF174F53), Color(0xFF203D58)))
+                        } else {
+                            Brush.linearGradient(listOf(Color(0xFF202D47), Color(0xFF18243A)))
+                        },
+                        contentColor = Color.White
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                if (ownMessage) "YOU" else selectedFriend?.displayName ?: "ROOM PLAYER",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (ownMessage) Color(0xFF78E2C1) else Color(0xFF8DCBF0)
+                            )
+                            if (ownMessage) {
+                                Text("SENT", style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.48f))
+                            }
+                        }
                         Text(
-                            if (ownMessage) "You" else selectedFriend?.displayName ?: "Room player",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary
+                            message.text,
+                            modifier = Modifier.padding(top = 7.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFF1F5FC)
                         )
-                        Text(message.text, modifier = Modifier.padding(top = 4.dp))
                         if (!ownMessage) {
                             TextButton(
                                 onClick = {
