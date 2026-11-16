@@ -1,5 +1,6 @@
 package com.arenacards.feature.friends
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -74,7 +75,7 @@ fun FriendsScreen(
             ArenaSecondaryButton(text = "Back", onClick = onBack)
         }
 
-        ArenaPanel(Modifier.fillMaxWidth()) {
+        ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
             Text("Find a player", style = MaterialTheme.typography.titleLarge)
             Text(
                 "Search by the six-digit Gamer ID. Only public profiles appear in results.",
@@ -133,7 +134,7 @@ fun FriendsScreen(
             0 -> {
                 if (state.friends.isEmpty()) EmptyPanel("Your friends will appear here.")
                 state.friends.forEach { player ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(player)
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -173,7 +174,7 @@ fun FriendsScreen(
                     EmptyPanel("No pending friend requests.")
                 }
                 state.incomingRequests.forEach { request ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(request.player)
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -195,7 +196,7 @@ fun FriendsScreen(
                     }
                 }
                 state.outgoingRequests.forEach { request ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(request.player)
                         ArenaSecondaryButton(
                             text = "Cancel request",
@@ -225,7 +226,7 @@ fun FriendsScreen(
             2 -> {
                 if (state.blockedPlayers.isEmpty()) EmptyPanel("No players are blocked.")
                 state.blockedPlayers.forEach { player ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(player)
                         ArenaSecondaryButton(
                             text = "Unblock",
@@ -247,7 +248,7 @@ fun FriendsScreen(
             else -> {
                 if (state.invitations.isEmpty()) EmptyPanel("No room invitations right now.")
                 state.invitations.forEach { invitation ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         Text(
                             invitation.inviter?.displayName ?: "Arena player",
                             style = MaterialTheme.typography.titleMedium
@@ -326,14 +327,14 @@ private fun PlayerRow(player: SocialPlayer) {
 
 @Composable
 private fun EmptyPanel(text: String) {
-    ArenaPanel(Modifier.fillMaxWidth()) {
+    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
         Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun MessagePanel(text: String, isError: Boolean = false) {
-    ArenaPanel(Modifier.fillMaxWidth()) {
+    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
         Text(
             text,
             color = if (isError) MaterialTheme.colorScheme.error
