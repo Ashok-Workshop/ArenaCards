@@ -271,11 +271,14 @@ private fun LeaderboardContents(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        page.entries.forEachIndexed { index, player ->
-            LeaderboardEntry(
-                player,
-                Modifier.padding(top = if (index == 0) 16.dp else 8.dp)
+        if (page.entries.isNotEmpty()) {
+            LeaderboardPodium(
+                players = page.entries.take(3),
+                modifier = Modifier.fillMaxWidth().padding(top = 18.dp)
             )
+        }
+        page.entries.drop(3).forEach { player ->
+            LeaderboardEntry(player, Modifier.padding(top = 8.dp))
         }
         if (page.nextCursor != null) {
             ArenaSecondaryButton(
@@ -288,6 +291,48 @@ private fun LeaderboardContents(
     }
 }
 
+@Composable
+private fun LeaderboardPodium(
+    players: List<CompetitivePlayer>,
+    modifier: Modifier = Modifier
+) {
+    val ordered = players.sortedBy { it.rank }
+    val podiumOrder = when (ordered.size) {
+        1 -> ordered
+        2 -> listOf(ordered[1], ordered[0])
+        else -> listOf(ordered[1], ordered[0], ordered[2])
+    }
+    val heights = when (ordered.size) {
+        1 -> listOf(118.dp)
+        2 -> listOf(96.dp, 118.dp)
+        else -> listOf(96.dp, 118.dp, 82.dp)
+    }
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+        podiumOrder.forEachIndexed { index, player ->
+            val rankColor = when (player.rank) {
+                1 -> ArenaPalette.Gold
+                2 -> Color(0xFFB7C4D8)
+                3 -> Color(0xFFD58D66)
+                else -> MaterialTheme.colorScheme.outline
+            }
+            ArenaPanel(
+                modifier = Modifier.weight(1f).height(heights[index]),
+                backgroundBrush = Brush.verticalGradient(listOf(rankColor.copy(alpha = 0.24f), Color(0xFF17243A)))
+            ) {
+                Text(
+                    when (player.rank) { 1 -> "CHAMPION"; 2 -> "RUNNER-UP"; else -> "TOP 3" },
+                    color = rankColor, style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Black, maxLines = 1
+                )
+                PlayerAvatar(initials = player.avatarId.take(1), name = player.displayName, size = 38.dp,
+                    backgroundColor = rankColor, avatarId = player.avatarId)
+                Text(player.displayName, color = Color.White, style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold, maxLines = 1)
+                Text("${player.seasonPoints} pts", color = rankColor, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
 @Composable
 private fun LeaderboardEntry(player: CompetitivePlayer, modifier: Modifier = Modifier) {
     val accent = when (player.rank) {
