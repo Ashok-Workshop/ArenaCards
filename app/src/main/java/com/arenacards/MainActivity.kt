@@ -416,8 +416,8 @@ private fun ArenaCardsApp(
                 },
                 onHelpSupport = {
                     infoMessage = InfoMessage(
-                        "Help and support",
-                        "Support content and contact options will be added in a future update."
+                        "ArenaCards help",
+                        "ACCOUNT & SIGN-IN\nUse Forgot password on the sign-in screen to request a reset link. Email accounts must verify their address before social features are available.\n\nPLAYER PROFILE\nYour Gamer ID is permanent. You can change your display name, username, avatar and profile visibility from Player Profile.\n\nOFFLINE MATCHES\nPractice matches run locally against CPU players. They do not award competitive coins, ratings or online match history. You can change CPU difficulty from the practice pause menu.\n\nONLINE PLAY & REWARDS\nOnline matches, friends, chat, leaderboards and wallet rewards require the ArenaCards backend to be enabled. If a service is unavailable, try again later; do not repeat a reward claim if the app is still processing.\n\nSAFETY\nBlock a player to prevent further friend, room-invitation and chat interactions. Use Report on a message or player when you see abuse.\n\nNOTIFICATIONS\nAllow notifications in Android settings and enable the categories you want in ArenaCards notification preferences.\n\nSUPPORT CONTACT\nA verified support email or help website has not yet been configured for this build."
                     )
                 },
                 onSignIn = {
