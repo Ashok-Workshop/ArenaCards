@@ -58,6 +58,15 @@ This tracker reflects the repository after extending offline practice. “Implem
 - No monetary cost estimate is claimed. Estimate Firebase, SMS, Functions, Firestore, App Check, ads, multiplayer, chat, and notifications only after region, user volume, data shape, and traffic assumptions are agreed; verify current vendor pricing and quotas before launch. The `COST_ESTIMATION.md` document lists cost drivers.
 - Never commit signing keys/passwords, Firebase service-account credentials, local `google-services.json`, or local machine configuration.
 
+## Latest development pass (2026-11-16)
+
+- The practice pause menu now exposes Easy, Medium, and Hard CPU difficulty choices and reflects the active selection. The choice continues to use the existing SavedStateHandle persistence.
+- Hard CPU card selection now gives stronger preference to shedding high-point action cards while conserving Wild and Wild Draw Four cards when a useful colored action is available. A focused unit test covers this decision.
+- The home hero's continuously animated card fan now has a static reduced-motion rendering, and the existing settings preference is passed from the app navigation host.
+- Leaderboard/tournament, chat, profile, wallet, and social screen presentation received incremental branded-header, podium/bracket, contrast, and state-transition refinements. The card-back accessibility test was extended.
+- These are source changes on `rebuild/phase-1-audit`; no fresh Gradle build or test run was available in this pass. Do not mark the new CPU test or UI test as executed until a supported Android build environment runs them.
+- The branch is intentionally not merged. It has diverged from `main`; reconcile the three base-only commits before preparing a merge.
+
 ## Validation status
 
 - Latest `:feature:game:testDebugUnitTest`: 40 tests passed, including card-ID uniqueness, legacy saved-session decoding, completed-match recording, and practice-achievement rules.
