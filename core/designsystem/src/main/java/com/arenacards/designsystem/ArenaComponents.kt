@@ -293,25 +293,18 @@ fun ArenaCardTile(
     val latestOnDragStateChanged by rememberUpdatedState(onDragStateChanged)
     val latestDropTargetBounds by rememberUpdatedState(dropTargetBounds)
     val palette = cardPalette(color)
-    val ink = when (color) {
-        ArenaCardColor.BLUE, ArenaCardColor.GREEN, ArenaCardColor.YELLOW, ArenaCardColor.RED ->
-            ArenaPalette.Navy
-        ArenaCardColor.WILD -> Color.White
-    }
-    val brush = if (color == ArenaCardColor.WILD) {
-        Brush.linearGradient(
-            listOf(
-                Color(0xFF8F56E8),
-                Color(0xFF2868CB),
-                Color(0xFF18A984),
-                Color(0xFFE0A62F)
-            ),
-            start = androidx.compose.ui.geometry.Offset.Zero,
-            end = androidx.compose.ui.geometry.Offset(width.value, height.value)
-        )
+    val ink = if (color == ArenaCardColor.YELLOW || color == ArenaCardColor.GREEN) {
+        ArenaPalette.Navy
     } else {
-        Brush.linearGradient(listOf(palette, palette.copy(alpha = 0.78f)))
+        Color.White
     }
+    // A porcelain face with a saturated original ArenaCards suit panel reads
+    // clearly on both the felt table and a compact hand carousel.
+    val brush = Brush.linearGradient(
+        listOf(Color(0xFFFFFFFF), Color(0xFFE8EDF6), Color(0xFFDCE4F1)),
+        start = androidx.compose.ui.geometry.Offset.Zero,
+        end = androidx.compose.ui.geometry.Offset(width.value, height.value)
+    )
 
     Box(
         modifier = modifier
@@ -410,7 +403,7 @@ fun ArenaCardTile(
                 .height(height * 0.58f)
                 .rotate(-18f)
                 .clip(RoundedCornerShape(50))
-                .background(Color.White.copy(alpha = if (color == ArenaCardColor.WILD) 0.22f else 0.24f))
+                .background(Brush.linearGradient(listOf(palette, palette.copy(alpha = 0.78f))))
         )
         if (color == ArenaCardColor.WILD) {
             ArenaWildGlyph()
