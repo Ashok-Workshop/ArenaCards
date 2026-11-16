@@ -204,8 +204,8 @@ fun HomeScreen(
                     }
                     Box(Modifier.width(118.dp).height(126.dp), contentAlignment = Alignment.Center) {
                         Box(Modifier.size(112.dp).clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFFFF6684).copy(alpha = .38f), Color.Transparent))))
-                        MiniCard("7", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -17f }.padding(end = 46.dp, top = 14.dp))
-                        MiniCard("+2", Color(0xFF4B9EFF), Modifier.graphicsLayer { rotationZ = 13f }.padding(start = 43.dp, bottom = 12.dp))
+                        MiniCard("7", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -17f }.padding(end = 46.dp, top = 14.dp), reducedMotion)
+                        MiniCard("+2", Color(0xFF4B9EFF), Modifier.graphicsLayer { rotationZ = 13f }.padding(start = 43.dp, bottom = 12.dp), reducedMotion)
                     }
                 }
             }
@@ -252,9 +252,9 @@ fun HomeScreen(
 @Composable
 private fun CardFan(reducedMotion: Boolean) {
     Row(Modifier.width(116.dp).height(76.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((-14).dp)) {
-        MiniCard("4", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -13f }.padding(top = 5.dp))
+        MiniCard("4", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -13f }.padding(top = 5.dp), reducedMotion)
         MiniCard("6", Color(0xFFFFC84D), Modifier.padding(bottom = 5.dp), reducedMotion)
-        MiniCard("8", Color(0xFF48BDF5), Modifier.graphicsLayer { rotationZ = 13f }.padding(top = 5.dp))
+        MiniCard("8", Color(0xFF48BDF5), Modifier.graphicsLayer { rotationZ = 13f }.padding(top = 5.dp), reducedMotion)
     }
 }
 
