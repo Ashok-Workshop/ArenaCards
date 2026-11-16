@@ -717,6 +717,96 @@ fun ArenaInfoDialog(
     )
 }
 
+/**
+ * Original ArenaCards collectible card face. Pointer tilt is bounded and
+ * springs back to neutral; vector artwork stays crisp at every screen density.
+ */
+@Composable
+fun ArenaPremiumCard(
+    color: ArenaCardColor,
+    value: Int,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    reducedMotion: Boolean = false,
+    width: Dp = 104.dp,
+    height: Dp = 154.dp
+) {
+    var pointerTiltX by remember { mutableStateOf(0f) }
+    var pointerTiltY by remember { mutableStateOf(0f) }
+    val tiltX by animateFloatAsState(if (reducedMotion) 0f else pointerTiltX, animationSpec = tween(160), label = "premium-card-tilt-x")
+    val tiltY by animateFloatAsState(if (reducedMotion) 0f else pointerTiltY, animationSpec = tween(160), label = "premium-card-tilt-y")
+    val lift by animateDpAsState(if (selected && !reducedMotion) 10.dp else 0.dp, label = "premium-card-lift")
+    val accent = cardPalette(color)
+    val shape = RoundedCornerShape(18.dp)
+    val label = cardValueLabel(value)
+    val glyph = cardCenterGlyph(value)
+
+    Box(
+        modifier = modifier
+            .width(width)
+            .height(height)
+            .graphicsLayer {
+                rotationX = tiltX
+                rotationY = tiltY
+                translationY = -lift.toPx()
+                cameraDistance = 26f * density
+                shadowElevation = if (selected) 22.dp.toPx() else 12.dp.toPx()
+                this.shape = shape
+                clip = true
+            }
+            .pointerInput(reducedMotion) {
+                if (!reducedMotion) {
+                    detectDragGestures(
+                        onDragEnd = { pointerTiltX = 0f; pointerTiltY = 0f },
+                        onDragCancel = { pointerTiltX = 0f; pointerTiltY = 0f }
+                    ) { change, drag ->
+                        change.consume()
+                        pointerTiltY = (pointerTiltY + drag.x * 0.22f).coerceIn(-13f, 13f)
+                        pointerTiltX = (pointerTiltX - drag.y * 0.22f).coerceIn(-13f, 13f)
+                    }
+                }
+            }
+            .clip(shape)
+            .background(Brush.linearGradient(listOf(Color(0xFFFCFDFF), Color(0xFFE8EDF7))))
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                brush = Brush.linearGradient(listOf(Color.White, accent.copy(alpha = 0.72f), Color(0xFF9BA9C1))),
+                shape = shape
+            )
+            .semantics {
+                contentDescription = "${label} ${color.name.lowercase()} ArenaCards card"
+                this.selected = selected
+            }
+    ) {
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.linearGradient(listOf(Color.White.copy(alpha = 0.62f), Color.Transparent, accent.copy(alpha = 0.10f)))
+            )
+        )
+        Box(
+            Modifier.align(Alignment.Center).size(width * 0.78f, height * 0.66f)
+                .graphicsLayer { rotationZ = -24f }
+                .clip(RoundedCornerShape(50))
+                .background(Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.82f))))
+        )
+        Text(
+            label,
+            modifier = Modifier.align(Alignment.Center),
+            color = if (color == ArenaCardColor.YELLOW || color == ArenaCardColor.GREEN) Color(0xFF10182A) else Color.White,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Black
+        )
+        Text(label, modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            color = Color(0xFF172238), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+        Text(glyph, modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
+            color = Color(0xFF172238), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
+        Box(
+            Modifier.fillMaxWidth().height(20.dp).align(Alignment.TopCenter)
+                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.58f), Color.Transparent)))
+        )
+    }
+}
+
 private fun cardPalette(color: ArenaCardColor): Color = when (color) {
     ArenaCardColor.RED -> ArenaPalette.Red
     ArenaCardColor.BLUE -> ArenaPalette.Blue
