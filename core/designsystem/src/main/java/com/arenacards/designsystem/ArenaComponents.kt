@@ -349,11 +349,17 @@ fun ArenaCardTile(
                 translationX = dragOffset.x
                 translationY += dragOffset.y
                 alpha = if (enabled) 1f else 0.62f
-                rotationY = tilt
+                // Live 3D response while the player lifts and moves a card.
+                // The effect is bounded so the face remains readable on small phones.
+                rotationX = if (reducedMotion) 0f else
+                    (-(dragOffset.y / height.toPx().coerceAtLeast(1f)) * 18f).coerceIn(-10f, 10f)
+                rotationY = if (reducedMotion) 0f else
+                    (tilt + (dragOffset.x / width.toPx().coerceAtLeast(1f)) * 18f).coerceIn(-14f, 14f)
                 rotationZ = twist
                 scaleX = draggingScale
                 scaleY = draggingScale
-                cameraDistance = 24 * density
+                shadowElevation = if (isDragging && !reducedMotion) 26.dp.toPx() else if (selected) 16.dp.toPx() else 6.dp.toPx()
+                cameraDistance = 22 * density
             }
             .shadow(if (selected) 12.dp else 5.dp, RoundedCornerShape(ArenaShapeTokens.Card))
             .clip(RoundedCornerShape(ArenaShapeTokens.Card))
