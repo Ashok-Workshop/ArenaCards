@@ -496,40 +496,83 @@ fun ArenaTableBackdrop(
     modifier: Modifier = Modifier,
     content: @Composable BoxScope.() -> Unit
 ) {
+    // Static procedural lighting gives the table depth without a continuous
+    // animation loop, keeping rendering friendly to lower-powered devices.
     val isDark = MaterialTheme.colorScheme.background.luminance() < 0.5f
-    val tableCenter = if (isDark) Color(0xFF102C32) else Color(0xFFE5F3EC)
-    val glow = ArenaPalette.Green.copy(alpha = if (isDark) 0.12f else 0.09f)
-    val ring = (if (isDark) ArenaPalette.Gold else Color(0xFF246A56))
-        .copy(alpha = if (isDark) 0.055f else 0.12f)
+    val outer = if (isDark) Color(0xFF070D1B) else Color(0xFF122A28)
+    val mid = if (isDark) Color(0xFF101C32) else Color(0xFF1A5143)
+    val felt = if (isDark) Color(0xFF123B3B) else Color(0xFF26745C)
+    val gold = Color(0xFFE8BC67)
     Box(
         modifier = modifier
             .background(
                 Brush.verticalGradient(
-                    listOf(MaterialTheme.colorScheme.background, tableCenter, MaterialTheme.colorScheme.background)
+                    colorStops = arrayOf(
+                        0f to outer,
+                        0.34f to mid,
+                        0.58f to felt,
+                        0.82f to mid,
+                        1f to outer
+                    )
                 )
             )
             .drawBehind {
-                val center = Offset(size.width * 0.5f, size.height * 0.42f)
+                val center = Offset(size.width * 0.5f, size.height * 0.43f)
+                val maxRadius = size.maxDimension * 0.78f
                 drawCircle(
                     brush = Brush.radialGradient(
-                        listOf(glow, Color.Transparent),
+                        colors = listOf(
+                            Color(0xFF4CD6B0).copy(alpha = if (isDark) 0.17f else 0.12f),
+                            Color(0xFF1B8270).copy(alpha = 0.07f),
+                            Color.Transparent
+                        ),
                         center = center,
-                        radius = size.maxDimension * 0.72f
+                        radius = maxRadius
                     ),
-                    radius = size.maxDimension * 0.72f,
+                    radius = maxRadius,
                     center = center
                 )
+
+                val left = size.width * 0.035f
+                val top = size.height * 0.13f
+                val tableWidth = size.width * 0.93f
+                val tableHeight = size.height * 0.63f
                 drawOval(
-                    color = ring,
-                    topLeft = Offset(size.width * 0.05f, size.height * 0.16f),
-                    size = Size(size.width * 0.9f, size.height * 0.62f),
+                    brush = Brush.verticalGradient(
+                        listOf(gold.copy(alpha = 0.30f), Color(0xFF68D7BB).copy(alpha = 0.10f), gold.copy(alpha = 0.16f)),
+                        startY = top,
+                        endY = top + tableHeight
+                    ),
+                    topLeft = Offset(left, top),
+                    size = Size(tableWidth, tableHeight),
+                    style = Stroke(width = 7.dp.toPx())
+                )
+                val inset = 9.dp.toPx()
+                drawOval(
+                    color = Color.White.copy(alpha = 0.13f),
+                    topLeft = Offset(left + inset, top + inset),
+                    size = Size(tableWidth - inset * 2f, tableHeight - inset * 2f),
                     style = Stroke(width = 1.dp.toPx())
                 )
-                drawOval(
-                    color = Color.White.copy(alpha = 0.025f),
-                    topLeft = Offset(size.width * 0.09f, size.height * 0.2f),
-                    size = Size(size.width * 0.82f, size.height * 0.54f),
-                    style = Stroke(width = 1.dp.toPx())
+
+                val markerY = size.height * 0.445f
+                listOf(0.18f, 0.27f, 0.73f, 0.82f).forEach { fraction ->
+                    drawCircle(
+                        color = gold.copy(alpha = 0.32f),
+                        radius = 2.dp.toPx(),
+                        center = Offset(size.width * fraction, markerY)
+                    )
+                }
+
+                drawRect(
+                    brush = Brush.horizontalGradient(
+                        listOf(outer.copy(alpha = 0.72f), Color.Transparent, Color.Transparent, outer.copy(alpha = 0.72f))
+                    )
+                )
+                drawRect(
+                    brush = Brush.verticalGradient(
+                        listOf(outer.copy(alpha = 0.48f), Color.Transparent, Color.Transparent, outer.copy(alpha = 0.62f))
+                    )
                 )
             },
         content = content
