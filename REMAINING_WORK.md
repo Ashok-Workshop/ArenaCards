@@ -60,6 +60,9 @@ This tracker reflects the repository after extending offline practice. “Implem
 
 - Lifecycle-aware state collection was introduced for the app root, practice game, authentication, profile and leaderboard screens. The Android CI run on commit `4138c44` passed unit tests and debug APK assembly after adding the runtime-compose dependency to each affected module. This reduces background collection while screens are stopped; it does not replace physical-device lifecycle/process-death QA.
 
+- Added in-app Help & Support guidance covering account recovery, player profiles, offline-vs-online rewards, social safety, and notification setup. A verified support contact is deliberately not fabricated; it remains an owner configuration item.
+- Sign-out now attempts to unregister the current device's FCM token and mark presence offline before clearing authentication. Android CI passed on commit `daf065d` for that change; the Help & Support update is under a fresh Android CI run.
+
 ## Latest development pass (2026-11-16)
 
 - The practice pause menu now exposes Easy, Medium, and Hard CPU difficulty choices and reflects the active selection. The choice continues to use the existing SavedStateHandle persistence.
