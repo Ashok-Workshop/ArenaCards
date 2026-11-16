@@ -427,6 +427,26 @@ class GameEngineTest {
     }
 
     @Test
+    fun hardCpuConservesWildCardsWhenAColoredActionIsPlayable() {
+        val hand = listOf(
+            GameCard(CardColor.WILD, GameCard.WILD, true),
+            GameCard(CardColor.RED, GameCard.DRAW_TWO),
+            blue(6)
+        )
+
+        val choice = GameEngine.chooseCpuMove(
+            hand = hand,
+            topCard = red(3),
+            activeColor = CardColor.RED,
+            difficulty = CpuDifficulty.HARD,
+            nextPlayerCardCount = 5,
+            random = Random(7)
+        )
+
+        assertEquals(1, choice?.cardIndex)
+    }
+
+    @Test
     fun cpuDoesNotPlayWildDrawFourWhenItHasActiveColor() {
         val hand = listOf(
             GameCard(CardColor.WILD, GameCard.WILD_DRAW_FOUR, true),
