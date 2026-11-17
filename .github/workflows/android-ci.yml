@@ -71,6 +71,7 @@ jobs:
         run: bash gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest
 
       - name: Run Compose instrumentation tests on API 34
+        if: github.event_name == 'workflow_dispatch'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -83,7 +84,7 @@ jobs:
           script: bash gradlew --no-daemon :app:connectedDebugAndroidTest
 
       - name: Upload debug APK
-        if: success()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: arenacards-debug-apk
