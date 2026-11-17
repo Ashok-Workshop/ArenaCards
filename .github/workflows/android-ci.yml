@@ -70,14 +70,15 @@ jobs:
       - name: Run unit tests and assemble debug APK
         run: bash gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest
 
-      - name: Run Compose instrumentation tests on API 35
+      - name: Run Compose instrumentation tests on API 34
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 35
+          api-level: 34
           target: google_apis
           arch: x86_64
           profile: pixel_2
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          emulator-options: -no-window -gpu swiftshader -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
+          emulator-boot-timeout: 600
           disable-animations: true
           script: bash gradlew --no-daemon :app:connectedDebugAndroidTest
 
