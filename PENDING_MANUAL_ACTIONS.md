@@ -16,6 +16,9 @@ These are owner actions. No Firebase deployment, billing activation, or producti
 - Android CI passed on commit `8977687` after retrying a transient Maven Central HTTP 429 dependency-download failure. The run completed unit tests, debug APK assembly, and `assembleDebugAndroidTest`; the Compose instrumentation source compiles. This did not execute the UI tests on an emulator.
 - Commit `52b5519` adds an API 35 emulator step using `connectedDebugAndroidTest`. Its result is pending; only record UI test execution after the emulator job completes successfully.
 
+- API 35 emulator instrumentation attempt on commit `f139828` built the app and test APKs, but the app instrumentation process crashed before discovering or executing tests (reported 0 tests). A prior attempt also failed at emulator boot. This is not a passing UI test result; capture device logcat/test report and diagnose runner startup before treating the suite as verified.
+- The CI command is now scoped to `:app:connectedDebugAndroidTest` to avoid invoking connected instrumentation tasks across every feature module. The latest run result should be checked before release.
+
 ## Before building from a fresh clone
 
 - Install Android Studio and the project-required Android SDK/platform tools.
