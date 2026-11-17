@@ -79,7 +79,7 @@ jobs:
           profile: pixel_2
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
-          script: bash gradlew --no-daemon connectedDebugAndroidTest
+          script: bash gradlew --no-daemon :app:connectedDebugAndroidTest
 
       - name: Upload debug APK
         if: success()
