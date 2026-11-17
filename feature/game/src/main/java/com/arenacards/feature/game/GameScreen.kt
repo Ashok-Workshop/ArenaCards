@@ -439,22 +439,37 @@ fun ArenaCardsGameScreen(
                         ),
                         contentColor = Color.White
                     ) {
-                        Text(
-                            when {
-                                state.isDraw -> "ROUND DRAW"
-                                state.winner?.startsWith("You") == true -> "ARENA VICTORY"
-                                else -> "MATCH COMPLETE"
-                            },
-                            color = Color(0xFFFFD66B),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            state.winner ?: "The practice round ended in a draw.",
-                            modifier = Modifier.padding(top = 4.dp),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            ArenaCardsLogoMark(
+                                modifier = Modifier.size(56.dp),
+                                contentDescription = if (state.isDraw) {
+                                    "ArenaCards round draw emblem"
+                                } else {
+                                    "ArenaCards match result emblem"
+                                }
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    when {
+                                        state.isDraw -> "ROUND DRAW"
+                                        state.winner?.startsWith("You") == true -> "ARENA VICTORY"
+                                        else -> "MATCH COMPLETE"
+                                    },
+                                    color = Color(0xFFFFD66B),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    state.winner ?: "The practice round ended in a draw.",
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         Text(
                             "Hand score ${state.score}  •  ${formatMatchDuration(state.matchDurationMillis)}  •  CPU opponents",
                             modifier = Modifier.padding(top = 8.dp),
