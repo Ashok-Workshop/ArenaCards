@@ -100,3 +100,11 @@ This tracker reflects the repository after extending offline practice. “Implem
 - Emulator testing used standard Firestore Emulator and local Node `24.22.1`; Functions target Node `22`. These tests do not establish Enterprise or production behavior.
 - GitHub Actions Firebase CI on `be49a2f`, `9bb50a9`, and `ae11798` passed. Moderation tests check unauthenticated and ordinary-user denial, invalid review inputs, moderator review, admin report resolution, report replay idempotency, self-report rejection, invalid reason rejection, and report rate limiting. Callable-region tests cover social, moderation, notification, leaderboard and tournament exports. No real-device playtest or production Firebase integration test was performed.
 - Social/FCM/room-rule emulator tests do not verify production delivery, Enterprise Firestore, scheduled-job activation, physical-device UX, or App Check.
+
+
+### Latest verified development update (2026-11-18)
+
+- The offline practice result panel now pairs its existing victory/draw heading with the original ArenaCards emblem; result text, score, duration, noncompetitive-reward disclosure, replay, and home actions remain intact.
+- Android CI passed on commit `978ad4e` (run `44059698874`): unit tests, debug build, instrumentation-test APK compilation, and artifact upload. The emulator UI-test step is intentionally manual-dispatch-only after repeated hosted AVD boot timeouts; no new instrumentation execution is claimed.
+- Work trackers were refreshed on 2026-11-18. Account deletion remains design-only because approved retention, shared-record anonymization, legal exceptions, and reauthentication policy are still unresolved. Do not ship an incomplete destructive workflow.
+- Development branch remains separate from `main`; comparison currently reports 107 commits ahead and 3 behind. No merge or production deployment occurred.
