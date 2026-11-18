@@ -1,6 +1,6 @@
 # ArenaCards remaining work
 
-Updated: 2026-11-16
+Updated: 2026-11-18
 
 This tracker reflects the repository after extending offline practice. “Implemented” means source and tests exist; it does not imply production Firebase deployment, real-device verification, or Play Store readiness.
 
