@@ -1,6 +1,6 @@
 # ArenaCards pending manual actions
 
-Updated: 2026-11-16
+Updated: 2026-11-18
 
 These are owner actions. No Firebase deployment, billing activation, or production-data changes have been performed.
 
