@@ -61,3 +61,12 @@ These are owner actions. No Firebase deployment, billing activation, or producti
 - Add physical-device and multi-account QA for global/friend/season leaderboard privacy, registration/withdrawal, bracket visibility, assigned tournament matchmaking, completed placement, and notifications. No live season or tournament exists.
 - Before any Play release, owner decisions/configuration are still needed for release signing, privacy policy, data-safety declarations, account deletion, age rating, user-generated content policies, advertising disclosure, listing assets, and release approval.
 - Never share or commit signing keys/passwords or Firebase service-account credentials.
+
+
+## Latest validation update (2026-11-18)
+
+- Android CI run `44059698874` passed on commit `978ad4e`. It completed unit tests, debug APK assembly, Android instrumentation-test APK compilation, and artifact upload.
+- Hosted emulator execution is now gated behind manual workflow dispatch because API 35 and API 34 attempts timed out while waiting for emulator boot. The instrumentation source compiles, but the latest UI tests were not executed. Run the workflow manually in GitHub Actions on a stable AVD or execute `:app:connectedDebugAndroidTest` from a machine with a working Android emulator.
+- The latest UI change adds the ArenaCards emblem to the offline result panel. No physical-device QA, visual certification, or accessibility certification is implied by CI success.
+- Account deletion remains blocked on owner/legal decisions for retention periods, retained safety/fraud records, shared match/tournament anonymization, and the required web deletion request path. Implement only after those decisions are approved and test the workflow in a staging Firebase project.
+- Branch comparison on 2026-11-18: `rebuild/phase-1-audit` is 107 commits ahead and 3 behind `main`. Reconcile the three base-only commits and review the diff before opening/merging an integration PR; no merge was performed.
