@@ -2,6 +2,7 @@ package com.arenacards.feature.game
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.tween
@@ -31,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaCardColor
 import com.arenacards.designsystem.ArenaCardBack
 import com.arenacards.designsystem.ArenaCardReveal
@@ -79,7 +82,7 @@ fun ArenaCardsGameScreen(
         }
     )
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showPauseMenu by remember { mutableStateOf(false) }
     var showExitConfirmation by remember { mutableStateOf(false) }
     var showRestartConfirmation by remember { mutableStateOf(false) }
@@ -154,7 +157,7 @@ fun ArenaCardsGameScreen(
             )
 
             ArenaPanel(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
                 backgroundBrush = Brush.linearGradient(
                     listOf(Color(0xFF202B47), Color(0xFF263B4B))
                 ),
@@ -382,9 +385,17 @@ fun ArenaCardsGameScreen(
                         items = state.playerCards,
                         key = { index, card -> card.id.ifBlank { "legacy-hand-$index" } }
                     ) { index, card ->
+                        val handCenter = (state.playerCards.lastIndex / 2f)
+                        val fanOffset = index - handCenter
                         ArenaCardTile(
                             color = card.color.toArenaColor(),
                             value = card.value,
+                            modifier = Modifier.graphicsLayer {
+                                rotationZ = if (settings.reducedMotionEnabled) 0f
+                                else (fanOffset * 1.15f).coerceIn(-5f, 5f)
+                                translationY = if (settings.reducedMotionEnabled) 0f
+                                else (kotlin.math.abs(fanOffset) * 1.4f).dp.toPx()
+                            },
                             selected = state.selectedCardIndex == index,
                             enabled = index in state.playableCardIndices,
                             onClick = { playCard(index) },
@@ -428,22 +439,37 @@ fun ArenaCardsGameScreen(
                         ),
                         contentColor = Color.White
                     ) {
-                        Text(
-                            when {
-                                state.isDraw -> "ROUND DRAW"
-                                state.winner?.startsWith("You") == true -> "ARENA VICTORY"
-                                else -> "MATCH COMPLETE"
-                            },
-                            color = Color(0xFFFFD66B),
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            state.winner ?: "The practice round ended in a draw.",
-                            modifier = Modifier.padding(top = 4.dp),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            ArenaCardsLogoMark(
+                                modifier = Modifier.size(56.dp),
+                                contentDescription = if (state.isDraw) {
+                                    "ArenaCards round draw emblem"
+                                } else {
+                                    "ArenaCards match result emblem"
+                                }
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    when {
+                                        state.isDraw -> "ROUND DRAW"
+                                        state.winner?.startsWith("You") == true -> "ARENA VICTORY"
+                                        else -> "MATCH COMPLETE"
+                                    },
+                                    color = Color(0xFFFFD66B),
+                                    style = MaterialTheme.typography.labelLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    state.winner ?: "The practice round ended in a draw.",
+                                    modifier = Modifier.padding(top = 4.dp),
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
                         Text(
                             "Hand score ${state.score}  •  ${formatMatchDuration(state.matchDurationMillis)}  •  CPU opponents",
                             modifier = Modifier.padding(top = 8.dp),
@@ -529,6 +555,32 @@ fun ArenaCardsGameScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text("The CPU is paused. Your current match stays on this screen until you leave.")
+                    Text(
+                        "CPU DIFFICULTY",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        when (state.difficulty) {
+                            CpuDifficulty.EASY -> "Relaxed play · random legal moves"
+                            CpuDifficulty.MEDIUM -> "Balanced play · prioritises useful cards"
+                            CpuDifficulty.HARD -> "Strategic play · stronger card choices"
+                        },
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    listOf(
+                        CpuDifficulty.EASY to "Easy",
+                        CpuDifficulty.MEDIUM to "Medium",
+                        CpuDifficulty.HARD to "Hard"
+                    ).forEach { (difficulty, label) ->
+                        ArenaSecondaryButton(
+                            text = (if (state.difficulty == difficulty) "✓  " else "") + label,
+                            onClick = { viewModel.setDifficulty(difficulty) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                     ArenaSecondaryButton(
                         text = "Restart this match",
                         onClick = { showRestartConfirmation = true },
@@ -637,12 +689,17 @@ private fun PracticeHeader(
     onExit: () -> Unit
 ) {
     val title: @Composable ColumnScope.() -> Unit = {
-        Text(
-            text = "PRACTICE TABLE",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.labelLarge
-        )
-        Text("Match the moment", style = MaterialTheme.typography.headlineMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ArenaCardsLogoMark(Modifier.size(42.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                Text(
+                    text = "ARENA • PRACTICE TABLE",
+                    color = MaterialTheme.colorScheme.secondary,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text("Match the moment", style = MaterialTheme.typography.headlineMedium)
+            }
+        }
     }
     val controls: @Composable RowScope.() -> Unit = {
         ArenaSecondaryButton(
@@ -679,26 +736,82 @@ private fun OpponentSeat(
     opponent: OpponentUiState,
     modifier: Modifier = Modifier
 ) {
-    ArenaPanel(modifier = modifier) {
-        PlayerAvatar(
-            initials = opponent.name.substringAfterLast(" ").take(1),
-            name = opponent.name,
-            size = 42.dp,
-            isActive = opponent.isActive,
-            backgroundColor = ArenaPalette.Blue,
-            avatarId = if (opponent.name.endsWith("1")) "comet" else "spark"
-        )
+    val handProgress by androidx.compose.animation.core.animateFloatAsState(
+        targetValue = (opponent.cardCount.coerceIn(0, 14) / 14f),
+        animationSpec = tween(280),
+        label = "opponent-hand-count"
+    )
+    ArenaPanel(
+        modifier = modifier.animateContentSize(),
+        backgroundBrush = if (opponent.isActive) {
+            Brush.linearGradient(listOf(Color(0xFF29445B), Color(0xFF183A43), Color(0xFF17253E)))
+        } else {
+            Brush.linearGradient(listOf(Color(0xFF1A2941), Color(0xFF142139)))
+        }
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            PlayerAvatar(
+                initials = opponent.name.substringAfterLast(" ").take(1),
+                name = opponent.name,
+                size = 46.dp,
+                isActive = opponent.isActive,
+                backgroundColor = ArenaPalette.Blue,
+                avatarId = if (opponent.name.endsWith("1")) "comet" else "spark"
+            )
+            Box(
+                modifier = Modifier
+                    .size(9.dp)
+                    .background(
+                        if (opponent.isActive) ArenaPalette.Green else Color(0xFF68778F),
+                        androidx.compose.foundation.shape.CircleShape
+                    )
+            )
+        }
         Text(
             text = opponent.name,
-            modifier = Modifier.padding(top = 8.dp),
-            style = MaterialTheme.typography.labelLarge
+            modifier = Modifier.padding(top = 9.dp),
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            maxLines = 1
         )
-        Text(
-            text = "${opponent.cardCount} cards",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall,
-            textAlign = TextAlign.Start
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (opponent.isActive) "PLAYING" else "IN THE ARENA",
+                color = if (opponent.isActive) ArenaPalette.Green else Color(0xFF9EADC4),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "${opponent.cardCount} cards",
+                color = Color(0xFFD1DCEC),
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .height(4.dp)
+                .background(Color.White.copy(alpha = 0.10f), androidx.compose.foundation.shape.CircleShape)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(handProgress)
+                    .height(4.dp)
+                    .background(
+                        Brush.horizontalGradient(listOf(ArenaPalette.Blue, ArenaPalette.Purple)),
+                        androidx.compose.foundation.shape.CircleShape
+                    )
+            )
+        }
     }
 }
 

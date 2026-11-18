@@ -42,6 +42,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -52,6 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaCardColor
 import com.arenacards.designsystem.ArenaCardBack
 import com.arenacards.designsystem.ArenaCardReveal
@@ -131,13 +133,16 @@ fun MultiplayerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        "ARENA • LIVE",
-                        color = MaterialTheme.colorScheme.secondary,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Text("Online table", style = MaterialTheme.typography.headlineMedium)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    ArenaCardsLogoMark(Modifier.size(42.dp))
+                    Column {
+                        Text(
+                            "ARENA • LIVE",
+                            color = MaterialTheme.colorScheme.secondary,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                        Text("Online table", style = MaterialTheme.typography.headlineMedium)
+                    }
                 }
                 ArenaSecondaryButton(text = "‹ Back", onClick = { showExitConfirmation = true })
             }
@@ -969,14 +974,22 @@ private fun OnlineMatchTable(
             Text("Your hand • ${match.hand.size}", style = MaterialTheme.typography.titleMedium)
             Row(
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(top = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.Bottom
             ) {
-                match.hand.forEach { card ->
+                val handCenter = (match.hand.lastIndex / 2f)
+                match.hand.forEachIndexed { index, card ->
                     val canPlay = isPlayable(match, card) &&
                         (!match.hasDrawnThisTurn || card.id == match.drawnCardId)
                     ArenaCardTile(
                         color = card.toDesignColor(),
                         value = card.value,
+                        modifier = Modifier.graphicsLayer {
+                            val offset = index - handCenter
+                            rotationZ = if (reducedMotion) 0f else (offset * 1.1f).coerceIn(-5f, 5f)
+                            translationY = if (reducedMotion) 0f else (kotlin.math.abs(offset) * 1.3f).dp.toPx()
+                        },
+                        selected = card.id == match.drawnCardId,
                         enabled = canPlay && !isSubmitting,
                         onClick = { if (canPlay && !isSubmitting) onPlayCard(card) },
                         width = 66.dp,

@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.CoinBalance
 import com.arenacards.designsystem.PlayerAvatar
 
@@ -68,7 +69,8 @@ fun HomeScreen(
     xpToNextLevel: Int?,
     dailyRewardCoins: Int?,
     dailyRewardAvailable: Boolean?,
-    readyMissionCount: Int?
+    readyMissionCount: Int?,
+    reducedMotion: Boolean = false
 ) {
     BoxWithConstraints(
         Modifier.fillMaxSize().background(
@@ -82,9 +84,15 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
-                Column {
-                    Text("ARENA", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
-                    Text("CARDS  •  MULTIPLAYER", color = Cyan, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    ArenaCardsLogoMark(Modifier.size(42.dp))
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                        Text("ARENA", color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Black, letterSpacing = 1.sp)
+                        Text("CARDS  •  MULTIPLAYER", color = Cyan, fontSize = 9.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+                    }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     CoinBalance(
@@ -148,7 +156,7 @@ fun HomeScreen(
                             Text("READY WHEN YOU ARE", color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.ExtraBold)
                             Text("Pick a mode. Make your move. Own the table.", color = Color(0xFFD4DDF5), fontSize = 11.sp)
                         }
-                        CardFan()
+                        CardFan(reducedMotion)
                     }
                     if (playerLevel != null) {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -196,8 +204,8 @@ fun HomeScreen(
                     }
                     Box(Modifier.width(118.dp).height(126.dp), contentAlignment = Alignment.Center) {
                         Box(Modifier.size(112.dp).clip(CircleShape).background(Brush.radialGradient(listOf(Color(0xFFFF6684).copy(alpha = .38f), Color.Transparent))))
-                        MiniCard("7", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -17f }.padding(end = 46.dp, top = 14.dp))
-                        MiniCard("+2", Color(0xFF4B9EFF), Modifier.graphicsLayer { rotationZ = 13f }.padding(start = 43.dp, bottom = 12.dp))
+                        MiniCard("7", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -17f }.padding(end = 46.dp, top = 14.dp), reducedMotion)
+                        MiniCard("+2", Color(0xFF4B9EFF), Modifier.graphicsLayer { rotationZ = 13f }.padding(start = 43.dp, bottom = 12.dp), reducedMotion)
                     }
                 }
             }
@@ -242,17 +250,45 @@ fun HomeScreen(
 }
 
 @Composable
-private fun CardFan() {
+private fun CardFan(reducedMotion: Boolean) {
     Row(Modifier.width(116.dp).height(76.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy((-14).dp)) {
-        MiniCard("4", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -13f }.padding(top = 5.dp))
-        MiniCard("6", Color(0xFFFFC84D), Modifier.padding(bottom = 5.dp))
-        MiniCard("8", Color(0xFF48BDF5), Modifier.graphicsLayer { rotationZ = 13f }.padding(top = 5.dp))
+        MiniCard("4", Color(0xFFFF5474), Modifier.graphicsLayer { rotationZ = -13f }.padding(top = 5.dp), reducedMotion)
+        MiniCard("6", Color(0xFFFFC84D), Modifier.padding(bottom = 5.dp), reducedMotion)
+        MiniCard("8", Color(0xFF48BDF5), Modifier.graphicsLayer { rotationZ = 13f }.padding(top = 5.dp), reducedMotion)
     }
 }
 
 @Composable
-private fun MiniCard(value: String, color: Color, modifier: Modifier = Modifier) {
-    // Lightweight 3D-inspired idle motion: perspective tilt and a slow floating lift.
+private fun MiniCard(
+    value: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    reducedMotion: Boolean = false
+) {
+    if (reducedMotion) {
+        StaticMiniCard(value, color, modifier)
+    } else {
+        AnimatedMiniCard(value, color, modifier)
+    }
+}
+
+@Composable
+private fun StaticMiniCard(value: String, color: Color, modifier: Modifier) {
+    Box(
+        modifier
+            .size(39.dp, 59.dp)
+            .shadow(9.dp, RoundedCornerShape(9.dp))
+            .clip(RoundedCornerShape(9.dp))
+            .background(Brush.linearGradient(listOf(color, color.copy(alpha = .78f))))
+            .border(1.dp, Color.White.copy(alpha = .9f), RoundedCornerShape(9.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(value, color = Color.White, fontSize = 25.sp, fontWeight = FontWeight.Black)
+    }
+}
+
+@Composable
+private fun AnimatedMiniCard(value: String, color: Color, modifier: Modifier) {
     val motion = rememberInfiniteTransition(label = "arena-card-$value")
     val tilt by motion.animateFloat(
         initialValue = -4f,

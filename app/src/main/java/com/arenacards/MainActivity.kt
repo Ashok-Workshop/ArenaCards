@@ -26,7 +26,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +43,7 @@ import androidx.core.view.WindowCompat
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -63,6 +63,7 @@ import com.arenacards.data.FirebaseAuthRepository
 import com.arenacards.data.FirebasePlayerProfileRepository
 import com.arenacards.data.FirebaseWalletRepository
 import com.arenacards.data.FirebaseMultiplayerRepository
+import com.arenacards.data.FirebaseNotificationDeviceId
 import com.arenacards.data.FirebaseSocialRepository
 import com.arenacards.data.FirebaseCompetitiveRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -121,7 +122,7 @@ class MainActivity : ComponentActivity() {
         shouldOpenNotifications = intent.getBooleanExtra(EXTRA_OPEN_NOTIFICATIONS, false)
         val localStore = ArenaLocalStore(applicationContext)
         setContent {
-            val settings by localStore.settings.collectAsState(initial = ArenaSettings())
+            val settings by localStore.settings.collectAsStateWithLifecycle(initialValue = ArenaSettings())
             val feedback = remember { ArenaFeedbackController(settings) }
             SideEffect { feedback.updateSettings(settings) }
             DisposableEffect(feedback) {
@@ -217,7 +218,7 @@ private fun ArenaCardsApp(
             AuthViewModelFactory(FirebaseAuthRepository(applicationContext))
         }
     )
-    val authState by authViewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsStateWithLifecycle()
     val walletRepository = remember { FirebaseWalletRepository() }
     val multiplayerRepository = remember { FirebaseMultiplayerRepository() }
     val socialRepository = remember { FirebaseSocialRepository() }
@@ -227,7 +228,7 @@ private fun ArenaCardsApp(
             WalletViewModelFactory(walletRepository)
         }
     )
-    val walletState by walletViewModel.uiState.collectAsState()
+    val walletState by walletViewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(authState.user?.uid) {
         if (authState.isAuthenticated && authState.user?.uid != null) {
             walletViewModel.refresh()
@@ -240,7 +241,7 @@ private fun ArenaCardsApp(
             PlayerProfileViewModelFactory(FirebasePlayerProfileRepository())
         }
     )
-    val profileState by profileViewModel.uiState.collectAsState()
+    val profileState by profileViewModel.uiState.collectAsStateWithLifecycle()
     val activeProfile = profileState.profile?.takeIf {
         authState.isAuthenticated && it.uid == authState.user?.uid
     }
@@ -415,14 +416,35 @@ private fun ArenaCardsApp(
                 },
                 onHelpSupport = {
                     infoMessage = InfoMessage(
-                        "Help and support",
-                        "Support content and contact options will be added in a future update."
+                        "ArenaCards help",
+                        "ACCOUNT & SIGN-IN\nUse Forgot password on the sign-in screen to request a reset link. Email accounts must verify their address before social features are available.\n\nPLAYER PROFILE\nYour Gamer ID is permanent. You can change your display name, username, avatar and profile visibility from Player Profile.\n\nOFFLINE MATCHES\nPractice matches run locally against CPU players. They do not award competitive coins, ratings or online match history. You can change CPU difficulty from the practice pause menu.\n\nONLINE PLAY & REWARDS\nOnline matches, friends, chat, leaderboards and wallet rewards require the ArenaCards backend to be enabled. If a service is unavailable, try again later; do not repeat a reward claim if the app is still processing.\n\nSAFETY\nBlock a player to prevent further friend, room-invitation and chat interactions. Use Report on a message or player when you see abuse.\n\nNOTIFICATIONS\nAllow notifications in Android settings and enable the categories you want in ArenaCards notification preferences.\n\nSUPPORT CONTACT\nA verified support email or help website has not yet been configured for this build."
                     )
                 },
                 onSignIn = {
                     navController.navigate(ArenaCardsDestinations.auth("welcome"))
                 },
-                onSignOut = authViewModel::signOut,
+                onSignOut = {
+                    coroutineScope.launch {
+                        try {
+                            socialRepository.removeNotificationToken(
+                                FirebaseNotificationDeviceId.get(context)
+                            )
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (error: Exception) {
+                            Log.w("ArenaCardsNotifications", "Could not remove this device's push token during sign-out.", error)
+                        }
+                        try {
+                            socialRepository.updatePresence(foreground = false)
+                        } catch (error: CancellationException) {
+                            throw error
+                        } catch (error: Exception) {
+                            Log.w("ArenaCardsPresence", "Could not mark player offline during sign-out.", error)
+                        } finally {
+                            authViewModel.signOut()
+                        }
+                    }
+                },
                 playerName = activeProfile?.displayName ?: authState.user?.displayName,
                 playerUsername = activeProfile?.username,
                 playerGamerId = activeProfile?.gamerId,
@@ -438,7 +460,8 @@ private fun ArenaCardsApp(
                 dailyRewardCoins = walletState.account?.dailyReward?.nextRewardCoins,
                 dailyRewardAvailable = walletState.account?.dailyReward?.claimAvailable,
                 readyMissionCount = walletState.account?.missions
-                    ?.count { it.completed && !it.claimed }
+                    ?.count { it.completed && !it.claimed },
+                reducedMotion = settings.reducedMotionEnabled
             )
         }
         composable(ArenaCardsDestinations.PROFILE_GATE) {

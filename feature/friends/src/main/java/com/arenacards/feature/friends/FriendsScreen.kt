@@ -1,8 +1,13 @@
 package com.arenacards.feature.friends
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -21,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPalette
 import com.arenacards.designsystem.ArenaPrimaryButton
@@ -44,19 +50,32 @@ fun FriendsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color(0xFF080E1D), Color(0xFF14233D), Color(0xFF080E1D))))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column(Modifier.weight(1f)) {
-                Text("YOUR ARENA", color = MaterialTheme.colorScheme.secondary)
-                Text("Friends & invites", style = MaterialTheme.typography.headlineMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                ArenaCardsLogoMark(Modifier.size(40.dp))
+                Column {
+                    Text("YOUR ARENA", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Friends & invites", style = MaterialTheme.typography.headlineMedium)
+                }
             }
             ArenaSecondaryButton(text = "Back", onClick = onBack)
         }
 
-        ArenaPanel(Modifier.fillMaxWidth()) {
+        ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
             Text("Find a player", style = MaterialTheme.typography.titleLarge)
             Text(
                 "Search by the six-digit Gamer ID. Only public profiles appear in results.",
@@ -115,7 +134,7 @@ fun FriendsScreen(
             0 -> {
                 if (state.friends.isEmpty()) EmptyPanel("Your friends will appear here.")
                 state.friends.forEach { player ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(player)
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -155,7 +174,7 @@ fun FriendsScreen(
                     EmptyPanel("No pending friend requests.")
                 }
                 state.incomingRequests.forEach { request ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(request.player)
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -177,7 +196,7 @@ fun FriendsScreen(
                     }
                 }
                 state.outgoingRequests.forEach { request ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(request.player)
                         ArenaSecondaryButton(
                             text = "Cancel request",
@@ -207,7 +226,7 @@ fun FriendsScreen(
             2 -> {
                 if (state.blockedPlayers.isEmpty()) EmptyPanel("No players are blocked.")
                 state.blockedPlayers.forEach { player ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         PlayerRow(player)
                         ArenaSecondaryButton(
                             text = "Unblock",
@@ -229,7 +248,7 @@ fun FriendsScreen(
             else -> {
                 if (state.invitations.isEmpty()) EmptyPanel("No room invitations right now.")
                 state.invitations.forEach { invitation ->
-                    ArenaPanel(Modifier.fillMaxWidth()) {
+                    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                         Text(
                             invitation.inviter?.displayName ?: "Arena player",
                             style = MaterialTheme.typography.titleMedium
@@ -308,14 +327,14 @@ private fun PlayerRow(player: SocialPlayer) {
 
 @Composable
 private fun EmptyPanel(text: String) {
-    ArenaPanel(Modifier.fillMaxWidth()) {
+    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
         Text(text, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
 @Composable
 private fun MessagePanel(text: String, isError: Boolean = false) {
-    ArenaPanel(Modifier.fillMaxWidth()) {
+    ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
         Text(
             text,
             color = if (isError) MaterialTheme.colorScheme.error

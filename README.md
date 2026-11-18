@@ -39,6 +39,10 @@ The Firestore Emulator rules test suite and Cloud Functions domain helper tests 
 
 The offline practice engine uses a 108-card deck and supports two to four seats, matching, Skip, Reverse, Draw Two, Wild, Wild Draw Four challenge resolution, penalties, CPU difficulty selection, pause/resume, and saved match state. Draw stacking is disabled. See [GAME_RULES.md](./GAME_RULES.md) for the original ArenaCards ruleset. Offline results do not grant competitive rewards. Device-local settings and practice history, original Compose graphics, and generated feedback are implemented; Compose UI/accessibility verification and final device QA remain outstanding. The online foundation includes human-only matchmaking, private room codes, server-validated turns, reconnect/scheduled timeout handling, configurable room rules, verified history, and callable-backed rewards. Social, chat, reports, and notifications are implemented in source only. See [REMAINING_WORK.md](./REMAINING_WORK.md) and [DEPLOYMENT_STATUS.md](./DEPLOYMENT_STATUS.md).
 
+## Privacy, account lifecycle and community safety
+
+The repository includes owner-review drafts for the account data inventory and deletion workflow (`ACCOUNT_DATA_LIFECYCLE.md`), privacy notice (`PRIVACY_NOTICE_DRAFT.md`), community guidelines and moderation operations (`COMMUNITY_GUIDELINES_DRAFT.md`), and store release readiness (`STORE_RELEASE_CHECKLIST.md`). These are engineering and policy preparation documents, not approved legal policies or evidence that account deletion, moderation staffing, advertising, production Firebase, or Play Store release are complete. Replace placeholders and implement the documented launch gates before publication.
+
 ## Install a debug build on a phone
 
 1. Enable Developer options and USB debugging on an Android phone (Android 7.0 / API 24 or newer).

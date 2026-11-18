@@ -1,8 +1,23 @@
 # ArenaCards pending manual actions
 
-Updated: 2026-11-14
+Updated: 2026-11-18
 
 These are owner actions. No Firebase deployment, billing activation, or production-data changes have been performed.
+
+
+## Latest automated validation (2026-11-16)
+
+- Android GitHub Actions run on commit `4138c44` passed unit tests and debug APK assembly after lifecycle-aware Flow collection was added to the app root, game, auth, profile, and leaderboard screens.
+- Firebase Functions CI passed on commit `ae11798`: Node.js unit tests, Firestore rules emulator tests, and Functions emulator tests. The suite includes moderator/admin report review authorization, report idempotency, self-report/invalid-reason rejection, and report rate-limit coverage.
+- These CI checks are source-level validation only. They do not establish production Firebase deployment, live FCM delivery, physical-device QA, accessibility certification, or Play Store readiness.
+
+- The latest confirmed Android CI pass is commit `8a3d7b2` (unit tests and debug APK assembly). Commit `050fd47` adds two Compose instrumentation tests for the card-reveal animation and reduced-motion path; GitHub has not reported a check run for that commit yet, so those new tests remain unverified. The earlier API 35 component suite passed, but do not treat that as execution of the new tests.
+
+- Android CI passed on commit `8977687` after retrying a transient Maven Central HTTP 429 dependency-download failure. The run completed unit tests, debug APK assembly, and `assembleDebugAndroidTest`; the Compose instrumentation source compiles. This did not execute the UI tests on an emulator.
+- Commit `52b5519` adds an API 35 emulator step using `connectedDebugAndroidTest`. Its result is pending; only record UI test execution after the emulator job completes successfully.
+
+- API 35 emulator instrumentation attempt on commit `f139828` built the app and test APKs, but the app instrumentation process crashed before discovering or executing tests (reported 0 tests). A prior attempt also failed at emulator boot. This is not a passing UI test result; capture device logcat/test report and diagnose runner startup before treating the suite as verified.
+- The CI command is now scoped to `:app:connectedDebugAndroidTest` to avoid invoking connected instrumentation tasks across every feature module. The latest run result should be checked before release.
 
 ## Before building from a fresh clone
 
@@ -46,3 +61,12 @@ These are owner actions. No Firebase deployment, billing activation, or producti
 - Add physical-device and multi-account QA for global/friend/season leaderboard privacy, registration/withdrawal, bracket visibility, assigned tournament matchmaking, completed placement, and notifications. No live season or tournament exists.
 - Before any Play release, owner decisions/configuration are still needed for release signing, privacy policy, data-safety declarations, account deletion, age rating, user-generated content policies, advertising disclosure, listing assets, and release approval.
 - Never share or commit signing keys/passwords or Firebase service-account credentials.
+
+
+## Latest validation update (2026-11-18)
+
+- Android CI run `44059698874` passed on commit `978ad4e`. It completed unit tests, debug APK assembly, Android instrumentation-test APK compilation, and artifact upload.
+- Hosted emulator execution is now gated behind manual workflow dispatch because API 35 and API 34 attempts timed out while waiting for emulator boot. The instrumentation source compiles, but the latest UI tests were not executed. Run the workflow manually in GitHub Actions on a stable AVD or execute `:app:connectedDebugAndroidTest` from a machine with a working Android emulator.
+- The latest UI change adds the ArenaCards emblem to the offline result panel. No physical-device QA, visual certification, or accessibility certification is implied by CI success.
+- Account deletion remains blocked on owner/legal decisions for retention periods, retained safety/fraud records, shared match/tournament anonymization, and the required web deletion request path. Implement only after those decisions are approved and test the workflow in a staging Firebase project.
+- Branch comparison on 2026-11-18: `rebuild/phase-1-audit` is 107 commits ahead and 3 behind `main`. Reconcile the three base-only commits and review the diff before opening/merging an integration PR; no merge was performed.

@@ -1,11 +1,14 @@
 package com.arenacards.feature.wallet
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LinearProgressIndicator
@@ -20,7 +23,10 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPrimaryButton
 import com.arenacards.designsystem.ArenaSecondaryButton
@@ -41,20 +47,44 @@ fun WalletScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color(0xFF080E1D), Color(0xFF14233D), Color(0xFF080E1D))))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        ArenaSecondaryButton(text = "‹  Back", onClick = onBack)
-        Text("Arena account", style = MaterialTheme.typography.headlineLarge)
-        Text(
-            "Wallet, rewards, missions, and server-verified progression.",
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Row(Modifier.weight(1f), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ArenaCardsLogoMark(Modifier.size(42.dp))
+                Column {
+                    Text("ARENA / TREASURY", color = MaterialTheme.colorScheme.tertiary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Your wallet", style = MaterialTheme.typography.headlineLarge)
+                }
+            }
+            ArenaSecondaryButton(text = "‹ Back", onClick = onBack)
+        }
+        ArenaPanel(
+            modifier = Modifier.fillMaxWidth(),
+            backgroundBrush = androidx.compose.ui.graphics.Brush.linearGradient(
+                listOf(Color(0xFF263D70), Color(0xFF174D50), Color(0xFF14243D))
+            ),
+            contentColor = Color.White
+        ) {
+            Text("ARENA TREASURY", color = Color(0xFFFFD477),
+                style = MaterialTheme.typography.labelLarge)
+            Text("Play. Progress. Celebrate.", modifier = Modifier.padding(top = 6.dp),
+                style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+            Text("Virtual coins, missions and server-verified progression.",
+                modifier = Modifier.padding(top = 5.dp), color = Color(0xFFD5E1F2))
+        }
 
         if (!isAuthenticated) {
-            ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+            ArenaPanel(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 Text("Sign in to access your server wallet.")
                 ArenaPrimaryButton(
                     text = "Sign in",
@@ -66,7 +96,7 @@ fun WalletScreen(
         }
 
         state.errorMessage?.let { message ->
-            ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+            ArenaPanel(modifier = Modifier.fillMaxWidth().animateContentSize()) {
                 Text(
                     message,
                     color = MaterialTheme.colorScheme.error,
@@ -95,19 +125,25 @@ fun WalletScreen(
             }
         }
         account?.let { snapshot ->
-            ArenaPanel(modifier = Modifier.fillMaxWidth()) {
+            ArenaPanel(
+                modifier = Modifier.fillMaxWidth().animateContentSize(),
+                backgroundBrush = Brush.linearGradient(
+                    listOf(Color(0xFF344B86), Color(0xFF215C62), Color(0xFF172B49))
+                ),
+                contentColor = Color.White
+            ) {
                 Text("WALLET BALANCE", style = MaterialTheme.typography.labelLarge)
                 Text(
                     snapshot.wallet.coinsBalance.toString(),
                     modifier = Modifier.padding(top = 4.dp),
-                    color = MaterialTheme.colorScheme.primary,
+                    color = Color.White,
                     style = MaterialTheme.typography.displaySmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     "Earned ${snapshot.wallet.totalCoinsEarned}  •  Spent ${snapshot.wallet.totalCoinsSpent}",
                     modifier = Modifier.padding(top = 4.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = Color(0xFFD7E5F7),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }

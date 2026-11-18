@@ -1,8 +1,13 @@
 package com.arenacards.feature.chat
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPrimaryButton
 import com.arenacards.designsystem.ArenaSecondaryButton
@@ -42,7 +48,9 @@ fun ChatScreen(
     val inConversation = state.selectedConversationId != null || state.selectedRoomId != null
 
     Column(
-        modifier = modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier = modifier.fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color(0xFF080E1D), Color(0xFF13223A), Color(0xFF080E1D))))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Row(
@@ -50,16 +58,24 @@ fun ChatScreen(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(Modifier.weight(1f)) {
-                Text("ARENA CHAT", color = MaterialTheme.colorScheme.secondary)
-                Text(
-                    selectedFriend?.displayName ?: if (state.selectedRoomId != null) {
-                        "Private room chat"
-                    } else {
-                        "Messages"
-                    },
-                    style = MaterialTheme.typography.headlineSmall
-                )
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                ArenaCardsLogoMark(Modifier.size(40.dp))
+                Column {
+                    Text("ARENA CHAT", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text(
+                        selectedFriend?.displayName ?: if (state.selectedRoomId != null) {
+                            "Private room chat"
+                        } else {
+                            "Messages"
+                        },
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                }
             }
             if (!inConversation) {
                 ArenaSecondaryButton(text = "Back", onClick = onBack)
@@ -93,7 +109,7 @@ fun ChatScreen(
             ) {
                 items(state.conversations, key = { it.conversationId }) { conversation ->
                     ArenaPanel(
-                        Modifier.fillMaxWidth()
+                        Modifier.fillMaxWidth().animateContentSize()
                     ) {
                         Text(
                             conversation.friend.displayName,
@@ -152,15 +168,38 @@ fun ChatScreen(
                 items(state.messages, key = { it.messageId }) { message ->
                     val ownMessage = message.senderUid == viewModel.currentUid
                     ArenaPanel(
-                        Modifier.fillMaxWidth(if (ownMessage) 0.88f else 0.96f)
+                        modifier = Modifier
+                            .fillMaxWidth(if (ownMessage) 0.88f else 0.96f)
                             .align(if (ownMessage) Alignment.End else Alignment.Start)
+                            .animateContentSize(),
+                        backgroundBrush = if (ownMessage) {
+                            Brush.linearGradient(listOf(Color(0xFF174F53), Color(0xFF203D58)))
+                        } else {
+                            Brush.linearGradient(listOf(Color(0xFF202D47), Color(0xFF18243A)))
+                        },
+                        contentColor = Color.White
                     ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                if (ownMessage) "YOU" else selectedFriend?.displayName ?: "ROOM PLAYER",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = if (ownMessage) Color(0xFF78E2C1) else Color(0xFF8DCBF0)
+                            )
+                            if (ownMessage) {
+                                Text("SENT", style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.48f))
+                            }
+                        }
                         Text(
-                            if (ownMessage) "You" else selectedFriend?.displayName ?: "Room player",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.secondary
+                            message.text,
+                            modifier = Modifier.padding(top = 7.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color(0xFFF1F5FC)
                         )
-                        Text(message.text, modifier = Modifier.padding(top = 4.dp))
                         if (!ownMessage) {
                             TextButton(
                                 onClick = {

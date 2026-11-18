@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -22,14 +23,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPalette
 import com.arenacards.designsystem.ArenaPrimaryButton
@@ -45,31 +47,39 @@ fun LeaderboardScreen(
     onBack: () -> Unit,
     onOpenOnlineMatch: (String) -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(
                 Brush.verticalGradient(
-                    listOf(MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.surface)
+                    listOf(Color(0xFF080E1D), Color(0xFF14233D), Color(0xFF080E1D))
                 )
             )
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TextButton(onClick = onBack) { Text("‹  Back") }
-        Text(
-            "ARENA  /  COMPETITIVE",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.labelLarge
-        )
-        Text(
-            "Rank among players",
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                ArenaCardsLogoMark(Modifier.size(42.dp))
+                Column {
+                    Text("ARENA / COMPETITIVE", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Rank among players", color = MaterialTheme.colorScheme.onBackground,
+                        style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                }
+            }
+            ArenaSecondaryButton(text = "‹ Back", onClick = onBack)
+        }
         state.profile?.let { profile ->
             CompetitiveProfileCard(profile, reducedMotion)
         }
@@ -105,7 +115,7 @@ fun LeaderboardScreen(
                 CircularProgressIndicator()
             }
         } else if (state.errorMessage != null && state.leaderboard == null) {
-            ArenaPanel(Modifier.fillMaxWidth()) {
+            ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                 state.errorMessage?.let { message ->
                     Text(message, color = MaterialTheme.colorScheme.error)
                 }
@@ -271,11 +281,14 @@ private fun LeaderboardContents(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        page.entries.forEachIndexed { index, player ->
-            LeaderboardEntry(
-                player,
-                Modifier.padding(top = if (index == 0) 16.dp else 8.dp)
+        if (page.entries.isNotEmpty()) {
+            LeaderboardPodium(
+                players = page.entries.take(3),
+                modifier = Modifier.fillMaxWidth().padding(top = 18.dp)
             )
+        }
+        page.entries.drop(3).forEach { player ->
+            LeaderboardEntry(player, Modifier.padding(top = 8.dp))
         }
         if (page.nextCursor != null) {
             ArenaSecondaryButton(
@@ -288,6 +301,48 @@ private fun LeaderboardContents(
     }
 }
 
+@Composable
+private fun LeaderboardPodium(
+    players: List<CompetitivePlayer>,
+    modifier: Modifier = Modifier
+) {
+    val ordered = players.sortedBy { it.rank }
+    val podiumOrder = when (ordered.size) {
+        1 -> ordered
+        2 -> listOf(ordered[1], ordered[0])
+        else -> listOf(ordered[1], ordered[0], ordered[2])
+    }
+    val heights = when (ordered.size) {
+        1 -> listOf(118.dp)
+        2 -> listOf(96.dp, 118.dp)
+        else -> listOf(96.dp, 118.dp, 82.dp)
+    }
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
+        podiumOrder.forEachIndexed { index, player ->
+            val rankColor = when (player.rank) {
+                1 -> ArenaPalette.Gold
+                2 -> Color(0xFFB7C4D8)
+                3 -> Color(0xFFD58D66)
+                else -> MaterialTheme.colorScheme.outline
+            }
+            ArenaPanel(
+                modifier = Modifier.weight(1f).height(heights[index]),
+                backgroundBrush = Brush.verticalGradient(listOf(rankColor.copy(alpha = 0.24f), Color(0xFF17243A)))
+            ) {
+                Text(
+                    when (player.rank) { 1 -> "CHAMPION"; 2 -> "RUNNER-UP"; 3 -> "TOP 3"; else -> "RANK #${player.rank}" },
+                    color = rankColor, style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Black, maxLines = 1
+                )
+                PlayerAvatar(initials = player.displayName.take(1), name = player.displayName, size = 38.dp,
+                    backgroundColor = rankColor, avatarId = player.avatarId)
+                Text(player.displayName, color = Color.White, style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold, maxLines = 1)
+                Text("${player.seasonPoints} pts", color = rankColor, style = MaterialTheme.typography.labelSmall)
+            }
+        }
+    }
+}
 @Composable
 private fun LeaderboardEntry(player: CompetitivePlayer, modifier: Modifier = Modifier) {
     val accent = when (player.rank) {
@@ -470,24 +525,74 @@ private fun TournamentDetailCard(
                         modifier = Modifier.width(220.dp),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Text("Round ${roundIndex + 1}", style = MaterialTheme.typography.titleMedium)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("ROUND ${roundIndex + 1}", style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Black)
+                            Text("${round.size} MATCHES", color = MaterialTheme.colorScheme.secondary,
+                                style = MaterialTheme.typography.labelSmall)
+                        }
                         round.forEach { match ->
-                            ArenaPanel(Modifier.fillMaxWidth()) {
-                                Text(
-                                    when (match.status) {
-                                        "COMPLETED" -> if (match.isBye) "BYE ADVANCEMENT" else "COMPLETED"
-                                        "ACTIVE" -> "MATCH IN PROGRESS"
-                                        else -> "UPCOMING MATCH"
-                                    },
-                                    color = MaterialTheme.colorScheme.secondary,
-                                    style = MaterialTheme.typography.labelSmall
+                            val activeMatch = match.status == "ACTIVE"
+                            val completedMatch = match.status == "COMPLETED"
+                            ArenaPanel(
+                                Modifier.fillMaxWidth().animateContentSize(),
+                                backgroundBrush = Brush.linearGradient(
+                                    if (activeMatch) listOf(Color(0xFF245D60), Color(0xFF1A3450))
+                                    else if (completedMatch) listOf(Color(0xFF293451), Color(0xFF18243B))
+                                    else listOf(Color(0xFF202B45), Color(0xFF172238))
                                 )
-                                match.players.forEach { player ->
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        player?.second ?: "Open bracket slot",
-                                        modifier = Modifier.padding(top = 4.dp),
-                                        fontWeight = if (player?.first == match.winnerUid) FontWeight.Bold else FontWeight.Normal
+                                        when {
+                                            completedMatch && match.isBye -> "BYE ADVANCEMENT"
+                                            completedMatch -> "FINAL RESULT"
+                                            activeMatch -> "LIVE MATCH"
+                                            else -> "UPCOMING"
+                                        },
+                                        color = if (activeMatch) Color(0xFF7DE2C3) else ArenaPalette.Gold,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Black
                                     )
+                                    Text("R${roundIndex + 1}", color = Color.White.copy(alpha = 0.55f),
+                                        style = MaterialTheme.typography.labelSmall)
+                                }
+                                match.players.forEachIndexed { seat, player ->
+                                    val isWinner = player?.first != null && player.first == match.winnerUid
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            player?.second ?: "Open bracket slot",
+                                            color = if (isWinner) Color(0xFFFFD477) else Color(0xFFE2EAF7),
+                                            fontWeight = if (isWinner) FontWeight.ExtraBold else FontWeight.Medium,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                        if (isWinner) {
+                                            Text("WINNER", color = Color(0xFFFFD477),
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontWeight = FontWeight.Black)
+                                        } else if (player == null) {
+                                            Text("TBD", color = Color.White.copy(alpha = 0.42f),
+                                                style = MaterialTheme.typography.labelSmall)
+                                        }
+                                    }
+                                    if (seat == 0) {
+                                        androidx.compose.material3.HorizontalDivider(
+                                            modifier = Modifier.padding(top = 7.dp),
+                                            color = Color.White.copy(alpha = 0.10f)
+                                        )
+                                    }
                                 }
                                 if (match.canStart) {
                                     ArenaPrimaryButton(
@@ -499,7 +604,7 @@ private fun TournamentDetailCard(
                                                 onOpenOnlineMatch
                                             )
                                         },
-                                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                        modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
                                         enabled = !busy
                                     )
                                 }

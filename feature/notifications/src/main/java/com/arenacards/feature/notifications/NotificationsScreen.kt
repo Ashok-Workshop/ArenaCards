@@ -1,8 +1,13 @@
 package com.arenacards.feature.notifications
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +23,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPrimaryButton
 import com.arenacards.designsystem.ArenaSecondaryButton
@@ -33,14 +39,27 @@ fun NotificationsScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Color(0xFF080E1D), Color(0xFF14233D), Color(0xFF080E1D))))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 18.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Column(Modifier.weight(1f)) {
-                Text("ARENA UPDATES", color = MaterialTheme.colorScheme.secondary)
-                Text("Notifications", style = MaterialTheme.typography.headlineMedium)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                ArenaCardsLogoMark(Modifier.size(40.dp))
+                Column {
+                    Text("ARENA UPDATES", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("Notifications", style = MaterialTheme.typography.headlineMedium)
+                }
             }
             ArenaSecondaryButton(text = "Back", onClick = onBack)
         }
@@ -53,7 +72,7 @@ fun NotificationsScreen(
             onClick = onRequestPermission,
             modifier = Modifier.fillMaxWidth()
         )
-        ArenaPanel(Modifier.fillMaxWidth()) {
+        ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
             Text("Notification preferences", style = MaterialTheme.typography.titleLarge)
             PreferenceToggle(
                 title = "Friend requests",
@@ -90,12 +109,12 @@ fun NotificationsScreen(
         state.noticeMessage?.let { Text(it, color = MaterialTheme.colorScheme.secondary) }
         Text("Recent activity", style = MaterialTheme.typography.titleLarge)
         if (state.notifications.isEmpty()) {
-            ArenaPanel(Modifier.fillMaxWidth()) {
+            ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                 Text("No notifications yet.", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         state.notifications.forEach { notification ->
-            ArenaPanel(Modifier.fillMaxWidth()) {
+            ArenaPanel(Modifier.fillMaxWidth().animateContentSize()) {
                 Text(
                     notification.type.toDisplayName(),
                     style = MaterialTheme.typography.titleMedium,

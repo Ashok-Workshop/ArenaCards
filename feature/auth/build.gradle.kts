@@ -30,6 +30,7 @@ android {
 }
 
 dependencies {
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation(project(":core:designsystem"))
     implementation(platform("androidx.compose:compose-bom:2024.10.01"))
     implementation("androidx.compose.foundation:foundation")

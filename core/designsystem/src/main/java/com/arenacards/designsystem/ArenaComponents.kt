@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -68,6 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.material3.LocalContentColor
 
 enum class ArenaCardColor { RED, BLUE, GREEN, YELLOW, WILD }
@@ -81,12 +84,12 @@ fun ArenaPrimaryButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.defaultMinSize(minHeight = 52.dp),
+        modifier = modifier.defaultMinSize(minHeight = 56.dp),
         enabled = enabled,
         shape = RoundedCornerShape(ArenaShapeTokens.Button),
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 5.dp,
+            defaultElevation = 5.dp,
+            pressedElevation = 1.dp,
             disabledElevation = 0.dp
         ),
         colors = ButtonDefaults.buttonColors(
@@ -107,7 +110,7 @@ fun ArenaSecondaryButton(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.defaultMinSize(minHeight = 50.dp),
+        modifier = modifier.defaultMinSize(minHeight = 54.dp),
         enabled = enabled,
         shape = RoundedCornerShape(ArenaShapeTokens.Button)
     ) {
@@ -123,11 +126,19 @@ fun ArenaPanel(
     content: @Composable ColumnScope.() -> Unit
 ) {
     Card(
-        modifier = modifier.border(
-            width = 1.dp,
-            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.28f),
-            shape = RoundedCornerShape(ArenaShapeTokens.Panel)
-        ),
+        modifier = modifier
+            .shadow(10.dp, RoundedCornerShape(ArenaShapeTokens.Panel))
+            .border(
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    listOf(
+                        Color.White.copy(alpha = 0.22f),
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.18f),
+                        ArenaPalette.Gold.copy(alpha = 0.10f)
+                    )
+                ),
+                shape = RoundedCornerShape(ArenaShapeTokens.Panel)
+            ),
         shape = RoundedCornerShape(ArenaShapeTokens.Panel),
         colors = CardDefaults.cardColors(
             containerColor = if (backgroundBrush == null) {
@@ -136,7 +147,7 @@ fun ArenaPanel(
                 Color.Transparent
             }
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 7.dp, pressedElevation = 3.dp)
     ) {
         if (backgroundBrush == null) {
             CompositionLocalProvider(LocalContentColor provides contentColor) {
@@ -285,25 +296,18 @@ fun ArenaCardTile(
     val latestOnDragStateChanged by rememberUpdatedState(onDragStateChanged)
     val latestDropTargetBounds by rememberUpdatedState(dropTargetBounds)
     val palette = cardPalette(color)
-    val ink = when (color) {
-        ArenaCardColor.BLUE, ArenaCardColor.GREEN, ArenaCardColor.YELLOW, ArenaCardColor.RED ->
-            ArenaPalette.Navy
-        ArenaCardColor.WILD -> Color.White
-    }
-    val brush = if (color == ArenaCardColor.WILD) {
-        Brush.linearGradient(
-            listOf(
-                Color(0xFF8F56E8),
-                Color(0xFF2868CB),
-                Color(0xFF18A984),
-                Color(0xFFE0A62F)
-            ),
-            start = androidx.compose.ui.geometry.Offset.Zero,
-            end = androidx.compose.ui.geometry.Offset(width.value, height.value)
-        )
+    val ink = if (color == ArenaCardColor.YELLOW || color == ArenaCardColor.GREEN) {
+        ArenaPalette.Navy
     } else {
-        Brush.linearGradient(listOf(palette, palette.copy(alpha = 0.78f)))
+        Color.White
     }
+    // A porcelain face with a saturated original ArenaCards suit panel reads
+    // clearly on both the felt table and a compact hand carousel.
+    val brush = Brush.linearGradient(
+        listOf(Color(0xFFFFFFFF), Color(0xFFE8EDF6), Color(0xFFDCE4F1)),
+        start = androidx.compose.ui.geometry.Offset.Zero,
+        end = androidx.compose.ui.geometry.Offset(width.value, height.value)
+    )
 
     Box(
         modifier = modifier
@@ -347,11 +351,17 @@ fun ArenaCardTile(
                 translationX = dragOffset.x
                 translationY += dragOffset.y
                 alpha = if (enabled) 1f else 0.62f
-                rotationY = tilt
+                // Live 3D response while the player lifts and moves a card.
+                // The effect is bounded so the face remains readable on small phones.
+                rotationX = if (reducedMotion) 0f else
+                    (-(dragOffset.y / height.toPx().coerceAtLeast(1f)) * 18f).coerceIn(-10f, 10f)
+                rotationY = if (reducedMotion) 0f else
+                    (tilt + (dragOffset.x / width.toPx().coerceAtLeast(1f)) * 18f).coerceIn(-14f, 14f)
                 rotationZ = twist
                 scaleX = draggingScale
                 scaleY = draggingScale
-                cameraDistance = 24 * density
+                shadowElevation = if (isDragging && !reducedMotion) 26.dp.toPx() else if (selected) 16.dp.toPx() else 6.dp.toPx()
+                cameraDistance = 22 * density
             }
             .shadow(if (selected) 12.dp else 5.dp, RoundedCornerShape(ArenaShapeTokens.Card))
             .clip(RoundedCornerShape(ArenaShapeTokens.Card))
@@ -402,7 +412,7 @@ fun ArenaCardTile(
                 .height(height * 0.58f)
                 .rotate(-18f)
                 .clip(RoundedCornerShape(50))
-                .background(Color.White.copy(alpha = if (color == ArenaCardColor.WILD) 0.22f else 0.24f))
+                .background(Brush.linearGradient(listOf(palette, palette.copy(alpha = 0.78f))))
         )
         if (color == ArenaCardColor.WILD) {
             ArenaWildGlyph()
@@ -465,8 +475,18 @@ fun ArenaCardReveal(
             .width(width)
             .height(height)
             .graphicsLayer {
+                // A restrained 2.5D flip: add a small pitch and depth response
+                // without introducing a heavyweight 3D renderer or bitmap assets.
+                val angle = Math.toRadians(rotation.value.toDouble())
                 rotationY = rotation.value
-                cameraDistance = 32 * density
+                rotationX = if (reducedMotion) 0f else
+                    (kotlin.math.sin(angle) * 5.5f).toFloat()
+                val depthScale = if (reducedMotion) 1f else
+                    0.975f + (kotlin.math.abs(kotlin.math.sin(angle)) * 0.025f).toFloat()
+                scaleX = depthScale
+                scaleY = depthScale
+                shadowElevation = if (reducedMotion) 0.dp.toPx() else 12.dp.toPx()
+                cameraDistance = 28 * density
             },
         contentAlignment = Alignment.Center
     ) {
@@ -611,24 +631,85 @@ fun ArenaCardBack(
     width: Dp = 74.dp,
     height: Dp = 112.dp
 ) {
+    val shape = RoundedCornerShape(ArenaShapeTokens.Card)
     Box(
         modifier = modifier
             .size(width, height)
-            .clip(RoundedCornerShape(ArenaShapeTokens.Card))
+            .shadow(9.dp, shape)
+            .clip(shape)
             .background(
-                Brush.linearGradient(listOf(Color(0xFF263B77), Color(0xFF172343)))
+                Brush.linearGradient(
+                    colors = listOf(Color(0xFF263D78), Color(0xFF111B36), Color(0xFF202E59))
+                )
             )
-            .border(1.dp, Color.White.copy(alpha = 0.78f), RoundedCornerShape(ArenaShapeTokens.Card))
-            .semantics { contentDescription = "ArenaCards card back" },
+            .border(
+                width = 1.4.dp,
+                brush = Brush.linearGradient(
+                    listOf(Color(0xFFFFE4A1), Color.White.copy(alpha = 0.72f), Color(0xFF8DABEF))
+                ),
+                shape = shape
+            )
+            .drawBehind {
+                // Fine radial glints and inset frame make the reverse side
+                // recognisable without adding a bitmap or expensive effects.
+                val inset = size.minDimension * 0.085f
+                drawRoundRect(
+                    color = Color(0xFFFFD477).copy(alpha = 0.72f),
+                    topLeft = Offset(inset, inset),
+                    size = Size(size.width - inset * 2f, size.height - inset * 2f),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.minDimension * 0.12f),
+                    style = Stroke(width = 1.dp.toPx())
+                )
+                val center = Offset(size.width / 2f, size.height / 2f)
+                drawCircle(
+                    brush = Brush.radialGradient(
+                        listOf(Color(0xFF8DABEF).copy(alpha = 0.24f), Color.Transparent),
+                        center = center,
+                        radius = size.minDimension * 0.62f
+                    ),
+                    radius = size.minDimension * 0.62f,
+                    center = center
+                )
+                for (index in 0 until 4) {
+                    val x = size.width * (0.22f + index * 0.19f)
+                    drawCircle(
+                        color = Color.White.copy(alpha = 0.48f),
+                        radius = 1.dp.toPx(),
+                        center = Offset(x, size.height * 0.17f)
+                    )
+                    drawCircle(
+                        color = Color(0xFFFFD477).copy(alpha = 0.55f),
+                        radius = 1.dp.toPx(),
+                        center = Offset(x, size.height * 0.83f)
+                    )
+                }
+            }
+            .semantics { contentDescription = "ArenaCards premium card back" },
         contentAlignment = Alignment.Center
     ) {
         Box(
-            modifier = Modifier
-                .padding(6.dp)
+            Modifier
+                .padding(7.dp)
                 .matchParentSize()
-                .border(1.dp, ArenaPalette.Blue.copy(alpha = 0.7f), RoundedCornerShape(12.dp))
+                .border(
+                    1.dp,
+                    Color.White.copy(alpha = 0.16f),
+                    RoundedCornerShape(10.dp)
+                )
         )
-        ArenaCardsLogoMark(Modifier.size(43.dp))
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            ArenaCardsLogoMark(Modifier.size(width * 0.58f))
+            Text(
+                text = "ARENA",
+                color = Color(0xFFFFE5A8),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.4.sp
+            )
+        }
     }
 }
 
@@ -707,6 +788,96 @@ fun ArenaInfoDialog(
         },
         shape = RoundedCornerShape(24.dp)
     )
+}
+
+/**
+ * Original ArenaCards collectible card face. Pointer tilt is bounded and
+ * springs back to neutral; vector artwork stays crisp at every screen density.
+ */
+@Composable
+fun ArenaPremiumCard(
+    color: ArenaCardColor,
+    value: Int,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    reducedMotion: Boolean = false,
+    width: Dp = 104.dp,
+    height: Dp = 154.dp
+) {
+    var pointerTiltX by remember { mutableStateOf(0f) }
+    var pointerTiltY by remember { mutableStateOf(0f) }
+    val tiltX by animateFloatAsState(if (reducedMotion) 0f else pointerTiltX, animationSpec = tween(160), label = "premium-card-tilt-x")
+    val tiltY by animateFloatAsState(if (reducedMotion) 0f else pointerTiltY, animationSpec = tween(160), label = "premium-card-tilt-y")
+    val lift by animateDpAsState(if (selected && !reducedMotion) 10.dp else 0.dp, label = "premium-card-lift")
+    val accent = cardPalette(color)
+    val shape = RoundedCornerShape(18.dp)
+    val label = cardValueLabel(value)
+    val glyph = cardCenterGlyph(value)
+
+    Box(
+        modifier = modifier
+            .width(width)
+            .height(height)
+            .graphicsLayer {
+                rotationX = tiltX
+                rotationY = tiltY
+                translationY = -lift.toPx()
+                cameraDistance = 26f * density
+                shadowElevation = if (selected) 22.dp.toPx() else 12.dp.toPx()
+                this.shape = shape
+                clip = true
+            }
+            .pointerInput(reducedMotion) {
+                if (!reducedMotion) {
+                    detectDragGestures(
+                        onDragEnd = { pointerTiltX = 0f; pointerTiltY = 0f },
+                        onDragCancel = { pointerTiltX = 0f; pointerTiltY = 0f }
+                    ) { change, drag ->
+                        change.consume()
+                        pointerTiltY = (pointerTiltY + drag.x * 0.22f).coerceIn(-13f, 13f)
+                        pointerTiltX = (pointerTiltX - drag.y * 0.22f).coerceIn(-13f, 13f)
+                    }
+                }
+            }
+            .clip(shape)
+            .background(Brush.linearGradient(listOf(Color(0xFFFCFDFF), Color(0xFFE8EDF7))))
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                brush = Brush.linearGradient(listOf(Color.White, accent.copy(alpha = 0.72f), Color(0xFF9BA9C1))),
+                shape = shape
+            )
+            .semantics {
+                contentDescription = "${cardSpokenLabel(value)} ${color.name.lowercase()} ArenaCards card"
+                this.selected = selected
+            }
+    ) {
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.linearGradient(listOf(Color.White.copy(alpha = 0.62f), Color.Transparent, accent.copy(alpha = 0.10f)))
+            )
+        )
+        Box(
+            Modifier.align(Alignment.Center).size(width * 0.78f, height * 0.66f)
+                .graphicsLayer { rotationZ = -24f }
+                .clip(RoundedCornerShape(50))
+                .background(Brush.linearGradient(listOf(accent, accent.copy(alpha = 0.82f))))
+        )
+        Text(
+            label,
+            modifier = Modifier.align(Alignment.Center),
+            color = if (color == ArenaCardColor.YELLOW || color == ArenaCardColor.GREEN) Color(0xFF10182A) else Color.White,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Black
+        )
+        Text(label, modifier = Modifier.align(Alignment.TopStart).padding(8.dp),
+            color = Color(0xFF172238), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black)
+        Text(glyph, modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
+            color = Color(0xFF172238), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black)
+        Box(
+            Modifier.fillMaxWidth().height(20.dp).align(Alignment.TopCenter)
+                .background(Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.58f), Color.Transparent)))
+        )
+    }
 }
 
 private fun cardPalette(color: ArenaCardColor): Color = when (color) {

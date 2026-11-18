@@ -15,6 +15,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -110,6 +111,78 @@ class ArenaVisualComponentsTest {
         }
 
         composeRule.onNodeWithText("Drops: 1").assertExists()
+    }
+
+    @Test
+    fun premiumCardExposesItsOriginalCardIdentity() {
+        composeRule.setContent {
+            ArenaCardsTheme {
+                ArenaPremiumCard(
+                    color = ArenaCardColor.WILD,
+                    value = 14,
+                    selected = true,
+                    reducedMotion = true
+                )
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("Wild Draw Four wild ArenaCards card")
+            .assertExists()
+    }
+
+    @Test
+    fun premiumCardBackExposesBrandIdentity() {
+        composeRule.setContent {
+            ArenaCardsTheme {
+                ArenaCardBack()
+            }
+        }
+
+        composeRule.onNodeWithContentDescription("ArenaCards premium card back")
+            .assertExists()
+    }
+
+
+    @Test
+    fun cardRevealShowsFaceWithoutMotionWhenReducedMotionIsEnabled() {
+        composeRule.setContent {
+            ArenaCardsTheme {
+                ArenaCardReveal(
+                    color = ArenaCardColor.BLUE,
+                    value = 8,
+                    eventId = "reduced-motion-reveal",
+                    reducedMotion = true
+                )
+            }
+        }
+
+        composeRule.waitForIdle()
+        composeRule.onNodeWithContentDescription("8 blue card").assertExists()
+    }
+
+    @Test
+    fun cardRevealFinishesItsFlipOnTheNewDiscardEvent() {
+        composeRule.setContent {
+            ArenaCardsTheme {
+                val event = remember { mutableStateOf("first-card") }
+                Column {
+                    ArenaCardReveal(
+                        color = ArenaCardColor.RED,
+                        value = 10,
+                        eventId = event.value
+                    )
+                    androidx.compose.material3.TextButton(onClick = { event.value = "second-card" }) {
+                        androidx.compose.material3.Text("Reveal next")
+                    }
+                }
+            }
+        }
+
+        composeRule.onNodeWithText("Reveal next").performClick()
+        composeRule.waitUntil(timeoutMillis = 2_000) {
+            composeRule.onAllNodesWithContentDescription("Skip red card").fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithContentDescription("Skip red card").assertExists()
     }
 
     @Test

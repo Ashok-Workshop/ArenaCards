@@ -1,6 +1,6 @@
 # ArenaCards remaining work
 
-Updated: 2026-11-14
+Updated: 2026-11-18
 
 This tracker reflects the repository after extending offline practice. “Implemented” means source and tests exist; it does not imply production Firebase deployment, real-device verification, or Play Store readiness.
 
@@ -58,6 +58,34 @@ This tracker reflects the repository after extending offline practice. “Implem
 - No monetary cost estimate is claimed. Estimate Firebase, SMS, Functions, Firestore, App Check, ads, multiplayer, chat, and notifications only after region, user volume, data shape, and traffic assumptions are agreed; verify current vendor pricing and quotas before launch. The `COST_ESTIMATION.md` document lists cost drivers.
 - Never commit signing keys/passwords, Firebase service-account credentials, local `google-services.json`, or local machine configuration.
 
+- Lifecycle-aware state collection was introduced for the app root, practice game, authentication, profile and leaderboard screens. The Android CI run on commit `4138c44` passed unit tests and debug APK assembly after adding the runtime-compose dependency to each affected module. This reduces background collection while screens are stopped; it does not replace physical-device lifecycle/process-death QA.
+
+- Added in-app Help & Support guidance covering account recovery, player profiles, offline-vs-online rewards, social safety, and notification setup. A verified support contact is deliberately not fabricated; it remains an owner configuration item.
+- Sign-out now attempts to unregister the current device's FCM token and mark presence offline before clearing authentication. Android CI passed on commit `daf065d` for that change; the Help & Support update is under a fresh Android CI run.
+
+## Latest development pass (2026-11-16)
+
+- The practice pause menu now exposes Easy, Medium, and Hard CPU difficulty choices and reflects the active selection. The choice continues to use the existing SavedStateHandle persistence.
+- Hard CPU card selection now gives stronger preference to shedding high-point action cards while conserving Wild and Wild Draw Four cards when a useful colored action is available. A focused unit test covers this decision.
+- The home hero's continuously animated card fan now has a static reduced-motion rendering, and the existing settings preference is passed from the app navigation host.
+- Leaderboard/tournament, chat, profile, wallet, and social screen presentation received incremental branded-header, podium/bracket, contrast, and state-transition refinements. The card-back accessibility test was extended.
+- These are source changes on `rebuild/phase-1-audit`. The latest GitHub Actions run on `ae11798` passed Android unit tests and debug APK assembly; Firebase Functions unit tests, Firestore rules emulator tests, and Functions emulator tests also passed. This verifies CI build/test execution for that commit, not visual, accessibility, physical-device, or production QA.
+- The branch is intentionally not merged. It has diverged from `main`; reconcile the three base-only commits before preparing a merge.
+
+
+### Latest graphics pass (2026-11-16)
+
+- Improved the discard-pile card reveal with a small pitch/depth/scale response during the existing Compose flip. Reduced-motion mode remains static; no external 3D engine or paid art asset was added.
+- The hand already supports restrained drag tilt/lift and selected-card feedback. This remains a 2.5D Compose presentation, not a full 3D renderer or finished cinematic animation package.
+- Visual review, screenshot baselines, contrast/font-scale/TalkBack checks, low-end-device profiling, and owner physical-device QA remain open for final QA.
+
+### Latest automation pass (2026-11-16)
+
+- Added `.github/workflows/android-ci.yml` on `rebuild/phase-1-audit`. Pull requests targeting `main`, pushes to `main` and `rebuild/**`, and manual dispatch now run JDK 17 setup, Gradle unit tests, and a debug APK assembly.
+- The workflow creates a temporary placeholder `google-services.json` only when the file is absent, to satisfy the Google Services Gradle plugin during CI. It contains no real credentials and does not connect to Firebase or deploy anything.
+- GitHub Actions validation passed for Android (unit tests, debug APK assembly, and artifact upload) and Firebase Functions CI (Functions unit tests, Firestore rules emulator tests, and Functions emulator tests) on commit `ae11798` (2026-11-16). The moderation authorization suite covers unauthenticated/ordinary-user denial, invalid inputs, moderator review, and admin report resolution. Social emulator coverage also checks report replay idempotency, self-report rejection, invalid report reasons, and report rate limiting. Expanded callable-region coverage includes social, moderation, notification, leaderboard, and tournament exports. CI does not replace instrumentation, physical-device, security, or production QA.
+- Branch comparison against `main` reports divergent history (development branch ahead, with three commits on `main` since the common base). The game-selection screen is byte-for-byte identical on both branches, and the table-backdrop implementation in `ArenaComponents.kt` is identical; the development branch has additional design-system content beyond `main`. No missing visual implementation from those three `main` commits was identified in the inspected files. Histories have not been merged; retain the development branch until an explicit integration step.
+
 ## Validation status
 
 - Latest `:feature:game:testDebugUnitTest`: 40 tests passed, including card-ID uniqueness, legacy saved-session decoding, completed-match recording, and practice-achievement rules.
@@ -70,5 +98,13 @@ This tracker reflects the repository after extending offline practice. “Implem
 - `:feature:profile:testDebugUnitTest`: passed (11 tests; no profile source changes in this iteration).
 - `:app:assembleDebug`: passed after game source/UI changes and again after the final test-constructor correction.
 - Emulator testing used standard Firestore Emulator and local Node `24.22.1`; Functions target Node `22`. These tests do not establish Enterprise or production behavior.
-- No real-device playtest or production Firebase integration test was performed.
+- GitHub Actions Firebase CI on `be49a2f`, `9bb50a9`, and `ae11798` passed. Moderation tests check unauthenticated and ordinary-user denial, invalid review inputs, moderator review, admin report resolution, report replay idempotency, self-report rejection, invalid reason rejection, and report rate limiting. Callable-region tests cover social, moderation, notification, leaderboard and tournament exports. No real-device playtest or production Firebase integration test was performed.
 - Social/FCM/room-rule emulator tests do not verify production delivery, Enterprise Firestore, scheduled-job activation, physical-device UX, or App Check.
+
+
+### Latest verified development update (2026-11-18)
+
+- The offline practice result panel now pairs its existing victory/draw heading with the original ArenaCards emblem; result text, score, duration, noncompetitive-reward disclosure, replay, and home actions remain intact.
+- Android CI passed on commit `978ad4e` (run `44059698874`): unit tests, debug build, instrumentation-test APK compilation, and artifact upload. The emulator UI-test step is intentionally manual-dispatch-only after repeated hosted AVD boot timeouts; no new instrumentation execution is claimed.
+- Work trackers were refreshed on 2026-11-18. Account deletion remains design-only because approved retention, shared-record anonymization, legal exceptions, and reauthentication policy are still unresolved. Do not ship an incomplete destructive workflow.
+- Development branch remains separate from `main`; comparison currently reports 107 commits ahead and 3 behind. No merge or production deployment occurred.

@@ -1,10 +1,12 @@
 package com.arenacards.feature.profile
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,7 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,10 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaPanel
 import com.arenacards.designsystem.ArenaPalette
 import com.arenacards.designsystem.ArenaPrimaryButton
@@ -64,7 +69,7 @@ fun PlayerProfileScreen(
     onBack: () -> Unit,
     onContinueHome: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val profile = state.profile?.takeIf { state.uid == uid && it.uid == uid }
     var editing by remember(profile?.uid) { mutableStateOf(profile == null) }
     var username by remember(profile?.uid) { mutableStateOf(profile?.username.orEmpty()) }
@@ -89,17 +94,27 @@ fun PlayerProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(Brush.verticalGradient(listOf(Color(0xFF080E1D), Color(0xFF14233D), Color(0xFF080E1D))))
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 22.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TextButton(onClick = onBack) { Text("‹  Back") }
-        Text(
-            text = "ARENA  /  PLAYER PROFILE",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.labelLarge
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                ArenaCardsLogoMark(Modifier.size(42.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text("ARENA IDENTITY", color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.labelLarge)
+                    Text("PLAYER PROFILE", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                }
+            }
+            TextButton(onClick = onBack) { Text("‹ Back") }
+        }
         Text(
             text = if (profile == null) "Create your player identity" else "Your player card",
             color = MaterialTheme.colorScheme.onBackground,
@@ -186,7 +201,7 @@ fun PlayerProfileGateScreen(
     onProfileFound: () -> Unit,
     onProfileRequired: () -> Unit
 ) {
-    val state by viewModel.uiState.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(uid) {
         viewModel.loadProfile(uid)
     }
@@ -368,7 +383,7 @@ private fun ProfileSummary(
     onContinueHome: () -> Unit
 ) {
     ArenaPanel(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().animateContentSize(),
         backgroundBrush = androidx.compose.ui.graphics.Brush.linearGradient(
             listOf(ArenaPalette.Purple.copy(alpha = 0.26f), ArenaPalette.Blue.copy(alpha = 0.18f))
         )
@@ -442,7 +457,7 @@ private fun ProfileStatCard(
     value: Long,
     modifier: Modifier = Modifier
 ) {
-    ArenaPanel(modifier = modifier) {
+    ArenaPanel(modifier = modifier.animateContentSize()) {
         Text(
             text = value.toString(),
             style = MaterialTheme.typography.headlineSmall,

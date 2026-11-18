@@ -425,9 +425,11 @@ object GameEngine {
             }
             CpuDifficulty.HARD -> playable.maxWith(
                 compareBy<Int> { index ->
-                    cpuCardPriority(hand[index], nextPlayerCardCount, hand, activeColor)
+                    cpuHardCardPriority(hand[index], nextPlayerCardCount, hand, activeColor)
                 }.thenBy { index ->
                     hand.count { it.color == hand[index].color && !it.isWild }
+                }.thenBy { index ->
+                    hand[index].value
                 }
             )
         }
@@ -538,6 +540,26 @@ object GameEngine {
             pendingWildDrawFourChallenge = pendingChallenge,
             pendingUnoCall = pendingUno
         )
+    }
+
+    private fun cpuHardCardPriority(
+        card: GameCard,
+        nextPlayerCardCount: Int,
+        hand: List<GameCard>,
+        activeColor: CardColor
+    ): Int {
+        val printedPoints = when {
+            card.isWild -> 0
+            card.value >= GameCard.SKIP -> ACTION_CARD_SCORE
+            else -> card.value
+        }
+        val wildConservation = when {
+            card.isWildDrawFour -> WILD_CARD_SCORE + 20
+            card.isWild -> WILD_CARD_SCORE
+            else -> 0
+        }
+        return cpuCardPriority(card, nextPlayerCardCount, hand, activeColor) * 2 +
+            printedPoints - wildConservation
     }
 
     private fun cpuCardPriority(

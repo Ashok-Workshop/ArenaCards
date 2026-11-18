@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.arenacards.designsystem.ArenaCardsLogoMark
 import com.arenacards.designsystem.ArenaCardTile
 import com.arenacards.designsystem.ArenaCardColor
 import com.arenacards.designsystem.ArenaPalette
@@ -89,11 +90,18 @@ fun OnboardingScreen(onComplete: () -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "ARENA  /  CARDS",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                ArenaCardsLogoMark(Modifier.size(34.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                    Text("ARENA", style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Black)
+                    Text("CARDS  •  PLAY TOGETHER", style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary)
+                }
+            }
             TextButton(
                 onClick = onComplete,
                 modifier = Modifier.semantics {

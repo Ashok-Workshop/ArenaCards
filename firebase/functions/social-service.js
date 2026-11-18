@@ -1212,6 +1212,61 @@ function createSocialService(db, options = {}) {
     };
   }
 
+  async function listModerationQueue(request) {
+    validateData(request.data || {}, ["pageSize", "status", "cursorCreatedAtMillis", "cursorId"]);
+    const uid = requireUid(request);
+    if (request.auth.token.moderator !== true && request.auth.token.admin !== true) {
+      throw new HttpsError("permission-denied", "Moderator authorization is required.");
+    }
+    const pageSize = request.data.pageSize ?? 20;
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > FRIEND_PAGE_SIZE_MAX) {
+      throw new HttpsError("invalid-argument", `pageSize must be 1-${FRIEND_PAGE_SIZE_MAX}.`);
+    }
+    const status = request.data.status;
+    if (status !== undefined && !["NEW", "UNDER_REVIEW", "RESOLVED", "DISMISSED"].includes(status)) {
+      throw new HttpsError("invalid-argument", "Choose a supported moderation status.");
+    }
+    const cursorMillis = request.data.cursorCreatedAtMillis;
+    const cursorId = request.data.cursorId;
+    if ((cursorMillis === undefined) !== (cursorId === undefined)
+      || (cursorMillis !== undefined
+        && (!Number.isSafeInteger(cursorMillis)
+          || typeof cursorId !== "string"
+          || !/^[A-Za-z0-9_-]{1,120}$/.test(cursorId)))) {
+      throw new HttpsError("invalid-argument", "Moderation queue cursor is invalid.");
+    }
+    let query = db.collection("reports");
+    if (status !== undefined) query = query.where("status", "==", status);
+    query = query.orderBy("createdAt", "asc")
+      .orderBy(FieldPath.documentId(), "asc")
+      .limit(pageSize + 1);
+    if (cursorMillis !== undefined) query = query.startAfter(new Date(cursorMillis), cursorId);
+    const snapshot = await query.get();
+    const hasMore = snapshot.docs.length > pageSize;
+    const docs = snapshot.docs.slice(0, pageSize);
+    const reports = docs.map((doc) => ({
+      reportId: doc.id,
+      reporterUid: doc.get("reporterUid"),
+      reportedUid: doc.get("reportedUid"),
+      reason: doc.get("reason"),
+      details: doc.get("details") || "",
+      matchId: doc.get("matchId") || null,
+      relatedMessage: doc.get("relatedMessage") || null,
+      status: doc.get("status"),
+      createdAtMillis: doc.get("createdAt")?.toMillis?.() ?? null,
+      reviewerUid: doc.get("reviewerUid") || null,
+      reviewNote: doc.get("reviewNote") || "",
+      reviewedAtMillis: doc.get("reviewedAt")?.toMillis?.() ?? null,
+    }));
+    const last = docs[docs.length - 1];
+    return {
+      reports,
+      nextCursor: hasMore && last
+        ? { cursorCreatedAtMillis: last.get("createdAt").toMillis(), cursorId: last.id }
+        : null,
+    };
+  }
+
   async function reviewReport(request) {
     validateData(request.data, ["reportId", "status", "reviewNote"]);
     const uid = requireUid(request);

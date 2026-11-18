@@ -80,6 +80,9 @@ async function cleanup(uids, extra = {}) {
     ...uids.flatMap((uid) => [
       db.collection("reports").doc(`${uid}_report-request-001`).delete().catch(() => {}),
       db.collection("reports").doc(`${uid}_report-request-002`).delete().catch(() => {}),
+      db.collection("reports").doc(`${uid}_report-request-003`).delete().catch(() => {}),
+      db.collection("reports").doc(`${uid}_report-request-004`).delete().catch(() => {}),
+      db.collection("reports").doc(`${uid}_report-request-005`).delete().catch(() => {}),
     ]),
   ]);
 }
@@ -317,6 +320,31 @@ test("private and room chat enforce membership, blocks, limits, reporting and no
       requestId: "report-request-001",
     }));
     assert.equal((await service.listReports(request(uids[1]))).reports.length, 1);
+    const duplicateReport = await service.reportPlayer(request(uids[1], {
+      reportedUid: uids[0],
+      reason: "SPAM",
+      details: "Repeated unsolicited messages",
+      messageId: sent.messageId,
+      requestId: "report-request-001",
+    }));
+    assert.equal(duplicateReport.submitted, true);
+    assert.equal((await service.listReports(request(uids[1]))).reports.length, 1);
+    await assert.rejects(
+      service.reportPlayer(request(uids[1], {
+        reportedUid: uids[1],
+        reason: "SPAM",
+        requestId: "report-self-0001",
+      })),
+      (error) => error.code === "invalid-argument"
+    );
+    await assert.rejects(
+      service.reportPlayer(request(uids[1], {
+        reportedUid: uids[0],
+        reason: "NOT_A_REASON",
+        requestId: "report-invalid-01",
+      })),
+      (error) => error.code === "invalid-argument"
+    );
     await assert.rejects(
       service.reviewReport(request(uids[0], {
         reportId: `${uids[1]}_report-request-001`,
@@ -329,6 +357,33 @@ test("private and room chat enforce membership, blocks, limits, reporting and no
       status: "UNDER_REVIEW",
       reviewNote: "Queued for moderator review",
     }, { moderator: true }));
+
+    const adminReview = await service.reviewReport(request(uids[0], {
+      reportId: `${uids[1]}_report-request-001`,
+      status: "RESOLVED",
+      reviewNote: "Reviewed by administrator",
+    }, { admin: true }));
+    assert.equal(adminReview.reviewed, true);
+    const reviewedReport = await db.collection("reports")
+      .doc(`${uids[1]}_report-request-001`).get();
+    assert.equal(reviewedReport.get("status"), "RESOLVED");
+    assert.equal(reviewedReport.get("reviewerUid"), uids[0]);
+
+    for (let index = 2; index <= 5; index += 1) {
+      await service.reportPlayer(request(uids[1], {
+        reportedUid: uids[0],
+        reason: "SPAM",
+        requestId: "report-request-00" + index,
+      }));
+    }
+    await assert.rejects(
+      service.reportPlayer(request(uids[1], {
+        reportedUid: uids[0],
+        reason: "SPAM",
+        requestId: "report-request-006",
+      })),
+      (error) => error.code === "resource-exhausted"
+    );
 
     await roomRef.set({
       roomId: roomRef.id,
